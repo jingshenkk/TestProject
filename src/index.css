@@ -1,0 +1,184 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════
+   蚂蚁视界 ANT VISION — Design System v2.0
+   Professional dark theme · Cinematic palette · Glass morphism
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Design Tokens ─────────────────────────────────────────── */
+:root {
+  /* Core backgrounds */
+  --bg-root: #090b0e;
+  --bg-canvas: #0d1014;
+  --bg-surface: #12171d;
+  --bg-card: #151b22;
+  --bg-card-hover: #1a222b;
+  --bg-elevated: #1d252e;
+  --bg-overlay: rgba(2, 5, 8, 0.74);
+  --bg-input: #0d1116;
+  --bg-track: rgba(255, 255, 255, 0.07);
+  --chrome-sidebar: #0b0e12;
+  --chrome-topbar: rgba(11, 13, 16, 0.92);
+
+  /* System gradient spec */
+  --surface-gradient-glow: radial-gradient(circle at 0% 0%, rgba(59,164,255,0.08), transparent 36%);
+  --surface-gradient-wash: linear-gradient(135deg, rgba(255,255,255,0.032), rgba(255,255,255,0.012));
+  --surface-gradient-card: var(--surface-gradient-glow), var(--bg-card);
+  --surface-gradient-panel: var(--surface-gradient-glow), var(--surface-gradient-wash), var(--bg-card);
+  --surface-gradient-elevated: var(--surface-gradient-glow), var(--surface-gradient-wash), var(--bg-elevated);
+  --surface-gradient-line: linear-gradient(90deg, rgba(59,164,255,0.34), rgba(59,164,255,0.12));
+
+  /* Accent - Blue from prototype */
+  --accent-primary: #3ba4ff;
+  --accent-primary-dim: #2688dc;
+  --accent-primary-bg: rgba(59, 164, 255, 0.14);
+  --accent-primary-glow: rgba(59, 164, 255, 0.18);
+  --accent-secondary: #38d39f;
+  --accent-tertiary: #f5b64a;
+
+  /* Semantic */
+  --color-success: #38d39f;
+  --color-warning: #f5b64a;
+  --color-error: #ff6b6b;
+  --color-info: #3ba4ff;
+
+  /* Text */
+  --text-primary: #edf1f5;
+  --text-secondary: #a4afb9;
+  --text-muted: #687581;
+  --text-inverse: #071017;
+
+  /* Borders */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --border-accent: rgba(59, 164, 255, 0.34);
+
+  /* Radii - Rounded from prototype */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.34), 0 0 0 1px var(--border-subtle);
+  --shadow-card-hover: 0 6px 18px rgba(0, 0, 0, 0.34), 0 0 0 1px var(--border-default);
+  --shadow-elevated: 0 18px 60px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--border-default);
+  --shadow-glow: 0 0 0 3px var(--accent-primary-glow);
+
+  /* Transitions */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
+
+  /* Typography */
+  --font-sans: "Inter", "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei",
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+}
+
+/* ── Reset & Base ──────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  min-width: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--bg-root);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  width: 100%;
+  min-width: 100%;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+  min-width: 100vw;
+  width: 100vw;
+  display: flex;
+}
+
+/* ── Animations ─────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59, 164, 255, 0.4); }
+  50% { box-shadow: 0 0 20px 4px rgba(59, 164, 255, 0.2); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s var(--ease-out-expo) forwards;
+}
+
+.animate-slide-in {
+  animation: slideInLeft 0.5s var(--ease-out-expo) forwards;
+}
+
+/* ── Utility Classes ───────────────────────────────────────── */
+/* P3-3：glass 工具类用 Tailwind v4 @utility 注册，便于 IDE 提示与按需处理；
+   &:hover 嵌套保留原 .glass-card:hover 的悬停升级行为，类名与调用处不变。 */
+@utility glass-panel {
+  background: var(--surface-gradient-panel);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(12px);
+}
+
+@utility glass-card {
+  background: var(--surface-gradient-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  transition: all var(--duration-normal) var(--ease-out-expo);
+
+  &:hover {
+    background: var(--surface-gradient-elevated);
+    border-color: var(--border-default);
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-2px);
+  }
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-canvas);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+}
