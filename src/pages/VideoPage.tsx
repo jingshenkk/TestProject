@@ -7,17 +7,30 @@ import ScriptSettings from '@/components/ScriptSettings';
 import GenerateButtons from '@/components/GenerateButtons';
 import EpisodeList from '@/components/EpisodeList';
 import type { Project } from '@/mocks/projects';
+import { getSelectedProject, setSelectedProject } from '@/stores/selectedProject';
 
 /**
  * 视频模块
- * —— P-路由：仅当「由项目点击跳转」到达（location.state 携带 project）时才进入创作页面。
- *     若用户直接从侧栏点击「视频」进入（无 state），则展示空态「暂未选择任何项目进行创作」，
- *     避免视频模块默认就铺开创作 UI 造成"凭空出现一个项目"的困惑。
+ * —— P-路由：仅当「由项目点击跳转」到达（location.state 携带 project，或内存里记住了上次选的项目）
+ *     时才进入创作页面。若用户从未选过项目、直接从侧栏点「视频」进入，则展示空态
+ *     「暂未选择任何项目进行创作」。
+ *
+ *   记忆逻辑（stores/selectedProject，模块级、内存单例、刷新即重置）：
+ *     - location.state.project 优先：代表"刚刚点某个项目跳过来"的最新意图 → 写入记忆
+ *     - 否则回退到记忆值：用户从视频页暂时跳到首页/其它模块再回来时，state 已丢，但记忆还在 → 恢复创作界面
+ *     - 记忆也为空：从未选过项目 → 空态
  */
 export default function VideoPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const project = (location.state as { project?: Project } | null)?.project ?? null;
+  const intentProject = (location.state as { project?: Project } | null)?.project ?? null;
+
+  // 最新跳转意图优先；无意图时回退到内存记忆，恢复上次选中的项目
+  const project = intentProject ?? getSelectedProject();
+  // 记住最新选中：既覆盖"点新项目"，也覆盖"从首页/其它模块不带 state 回来"
+  if (intentProject) {
+    setSelectedProject(intentProject);
+  }
 
   // 未选择项目：空态
   if (!project) {
