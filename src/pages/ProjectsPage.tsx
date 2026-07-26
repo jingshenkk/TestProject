@@ -1,9 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, MoreHorizontal, AlertTriangle, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import AppHeader from '@/components/AppHeader';
 import Modal from '@/components/Modal';
-import { sampleProjects, type Project } from '@/mocks/projects';
+import { createProject, deleteProject, fetchProjects, updateProject } from '@/api/projects';
+import { setSelectedProject as setCurrentProject } from '@/stores/selectedProject';
+import type { Project } from '@/types/project';
 
 // 删除确认弹窗
 interface DeleteConfirmModalProps {
@@ -155,6 +158,7 @@ function ProjectCard({ project, onDelete, onRename }: ProjectCardProps) {
 
   const handleCardClick = () => {
     // 点击进入视频模块，并携带当前 project，供 VideoPage 判定已选择项目
+    setCurrentProject(project);
     navigate('/video', { state: { project } });
   };
 
@@ -281,124 +285,120 @@ function ProjectCard({ project, onDelete, onRename }: ProjectCardProps) {
 }
 
 // 创建项目卡片
-function CreateProjectCard() {
-  const navigate = useNavigate();
+interface CreateProjectCardProps {
+  onCreate: () => void;
+}
 
-  const handleClick = () => {
-    // 创建新项目并进入视频模块；携带一个新建项目占位，避免 VideoPage 落入"未选择项目"空态
-    navigate('/video', {
-      state: {
-        project: {
-          id: `new-${Date.now()}`,
-          name: '未命名项目',
-          lastUpdated: new Date().toLocaleString('zh-CN', { hour12: false }),
-        },
-      },
-    });
-  };
-
+function CreateProjectCard({ onCreate }: CreateProjectCardProps) {
   return (
     <button
-      onClick={handleClick}
+      onClick={onCreate}
       className="glass-card aspect-[16/10] flex flex-col items-center justify-center gap-4 cursor-pointer group relative overflow-hidden"
     >
-      {/* 背景辉光 */}
       <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-primary)]/5 via-transparent to-[var(--accent-secondary)]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-      {/* 脉冲光环 */}
       <div className="relative">
         <div className="absolute inset-0 rounded-full bg-[var(--accent-primary)]/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-pulse" />
         <div className="w-16 h-16 rounded-full border-2 border-dashed border-[var(--border-default)] flex items-center justify-center group-hover:border-[var(--accent-primary)] group-hover:bg-[var(--accent-primary)]/10 transition-all duration-300 relative">
           <Plus size={32} className="text-[var(--text-muted)] group-hover:text-[var(--accent-primary)] transition-all duration-300 group-hover:rotate-90" />
         </div>
       </div>
-
       <span className="text-base font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors">创建项目</span>
-
-      {/* 底部提示 */}
       <span className="text-xs text-[var(--text-muted)] opacity-0 group-hover:opacity-100 transition-opacity duration-300">开始新的创作旅程</span>
     </button>
   );
 }
 
+interface CreateProjectModalProps {
+  isOpen: boolean;
+  isPending: boolean;
+  onCreate: (name: string) => void;
+  onCancel: () => void;
+}
+
+function CreateProjectModal({ isOpen, isPending, onCreate, onCancel }: CreateProjectModalProps) {
+  const [name, setName] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isOpen) setName('');
+  }, [isOpen]);
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onCancel}
+      zIndex="z-50"
+      closeOnBackdropClick={!isPending}
+      initialFocusRef={inputRef}
+      panelClassName="bg-[var(--bg-card)] rounded-xl border border-[var(--border-subtle)] p-6 w-[400px] shadow-xl animate-fade-in"
+      ariaLabel="创建项目"
+    >
+      <form onSubmit={(event) => { event.preventDefault(); if (name.trim()) onCreate(name.trim()); }}>
+        <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">创建项目</h3>
+        <p className="text-sm text-[var(--text-secondary)] mb-4">新项目会使用默认短剧工作流；后续可在创作页补充题材、规格与视觉风格。</p>
+        <input
+          ref={inputRef}
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          disabled={isPending}
+          placeholder="输入项目名称"
+          className="w-full px-4 py-3 rounded-lg bg-[var(--bg-input)] border border-[var(--border-subtle)] text-[var(--text-primary)] text-sm outline-none focus:border-[var(--accent-primary)] transition-colors mb-4"
+        />
+        <div className="flex items-center justify-end gap-3">
+          <button type="button" onClick={onCancel} disabled={isPending} className="px-4 py-2 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-colors">取消</button>
+          <button type="submit" disabled={isPending || !name.trim()} className="px-4 py-2 rounded-lg text-sm font-medium bg-[var(--accent-primary)] text-white disabled:opacity-50 hover:opacity-90 transition-opacity">{isPending ? '创建中...' : '创建并进入'}</button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
 export default function ProjectsPage() {
-  const [projects, setProjects] = useState<Project[]>(sampleProjects);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [renameModalOpen, setRenameModalOpen] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const projectsQuery = useQuery({ queryKey: ['projects'], queryFn: fetchProjects });
 
-  // 处理删除
-  const handleDelete = (project: Project) => {
-    setSelectedProject(project);
-    setDeleteModalOpen(true);
-  };
+  const invalidateProjects = () => queryClient.invalidateQueries({ queryKey: ['projects'] });
+  const deleteMutation = useMutation({ mutationFn: deleteProject, onSuccess: invalidateProjects });
+  const renameMutation = useMutation({ mutationFn: ({ id, name }: { id: number; name: string }) => updateProject(id, { name }), onSuccess: invalidateProjects });
+  const createMutation = useMutation({ mutationFn: createProject, onSuccess: (project) => {
+    invalidateProjects();
+    setCurrentProject(project);
+    navigate('/video', { state: { project } });
+  }});
 
+  const handleDelete = (project: Project) => { setSelectedProject(project); setDeleteModalOpen(true); };
   const confirmDelete = () => {
     if (!selectedProject) return;
-    setProjects(prev => prev.filter(p => p.id !== selectedProject.id));
-    setDeleteModalOpen(false);
-    setSelectedProject(null);
+    deleteMutation.mutate(selectedProject.id, { onSuccess: () => { setDeleteModalOpen(false); setSelectedProject(null); } });
   };
-
-  // 处理重命名
-  const handleRename = (project: Project) => {
-    setSelectedProject(project);
-    setRenameModalOpen(true);
-  };
-
-  const confirmRename = (newName: string) => {
+  const handleRename = (project: Project) => { setSelectedProject(project); setRenameModalOpen(true); };
+  const confirmRename = (name: string) => {
     if (!selectedProject) return;
-    setProjects(prev => prev.map(p =>
-      p.id === selectedProject.id ? { ...p, name: newName } : p
-    ));
-    setRenameModalOpen(false);
-    setSelectedProject(null);
+    renameMutation.mutate({ id: selectedProject.id, name }, { onSuccess: () => { setRenameModalOpen(false); setSelectedProject(null); } });
   };
+  const error = projectsQuery.error || deleteMutation.error || renameMutation.error || createMutation.error;
+  const errorMessage = error instanceof Error ? error.message : '';
 
   return (
     <div className="flex-1 flex flex-col min-w-0 h-full">
-      {/* Top Navigation */}
       <AppHeader title="项目管理" showBack={false} zIndex="z-40" />
-
-      {/* Page Content */}
       <main className="flex-1 p-4 lg:p-8 overflow-auto">
-        {/* Projects Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {/* Create Project Card */}
-          <CreateProjectCard />
-
-          {/* Project Cards */}
-          {projects.map((project) => (
-            <ProjectCard
-              key={project.id}
-              project={project}
-              onDelete={handleDelete}
-              onRename={handleRename}
-            />
-          ))}
-        </div>
+        {errorMessage && <p className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-500">{errorMessage}</p>}
+        {projectsQuery.isLoading ? <p className="text-sm text-[var(--text-secondary)]">正在加载项目...</p> : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <CreateProjectCard onCreate={() => setCreateModalOpen(true)} />
+            {(projectsQuery.data || []).map((project) => <ProjectCard key={project.id} project={project} onDelete={handleDelete} onRename={handleRename} />)}
+          </div>
+        )}
       </main>
-
-      {/* Modals */}
-      <DeleteConfirmModal
-        isOpen={deleteModalOpen}
-        projectName={selectedProject?.name || ''}
-        onConfirm={confirmDelete}
-        onCancel={() => {
-          setDeleteModalOpen(false);
-          setSelectedProject(null);
-        }}
-      />
-
-      <RenameModal
-        isOpen={renameModalOpen}
-        projectName={selectedProject?.name || ''}
-        onConfirm={confirmRename}
-        onCancel={() => {
-          setRenameModalOpen(false);
-          setSelectedProject(null);
-        }}
-      />
+      <DeleteConfirmModal isOpen={deleteModalOpen} projectName={selectedProject?.name || ''} onConfirm={confirmDelete} onCancel={() => { setDeleteModalOpen(false); setSelectedProject(null); }} />
+      <RenameModal isOpen={renameModalOpen} projectName={selectedProject?.name || ''} onConfirm={confirmRename} onCancel={() => { setRenameModalOpen(false); setSelectedProject(null); }} />
+      <CreateProjectModal isOpen={createModalOpen} isPending={createMutation.isPending} onCreate={(name) => createMutation.mutate({ name })} onCancel={() => setCreateModalOpen(false)} />
     </div>
   );
 }

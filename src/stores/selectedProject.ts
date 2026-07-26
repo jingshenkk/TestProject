@@ -1,4 +1,4 @@
-import type { Project } from '@/mocks/projects';
+import type { Project } from '@/types/project';
 
 /**
  * 「当前选中项目」记忆（模块级单例，非持久化）

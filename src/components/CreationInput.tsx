@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Plus, Sparkles, Zap, Wand2, Palette, Film, Bot, X, Check, ChevronRight } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, Sparkles, Zap, Wand2, Palette, Film, Bot, X, Check } from 'lucide-react';
 import Modal from './Modal';
 import {
   CONTENT_TYPE_OPTIONS,
@@ -7,10 +7,8 @@ import {
   ASPECT_RATIO_OPTIONS,
   FORMAT_PRESETS,
   AI_MODEL_OPTIONS,
-  CATEGORY_LABELS,
   type ContentTypeOption,
   type VisualStyleOption,
-  type AspectRatioOption,
   type FormatPreset,
   type AIModelOption,
 } from '@/lib/creationOptions';
@@ -33,6 +31,7 @@ interface CreationInputProps {
   options?: CreationInputOptions;
   containerClassName?: string;
   onGenerate?: (options: CreationInputOptions, prompt: string) => void;
+  isGenerating?: boolean;
 }
 
 const DEFAULT_OPTIONS: CreationInputOptions = {
@@ -60,6 +59,7 @@ export default function CreationInput({
   options: propOptions,
   containerClassName = 'mb-6 lg:mb-8',
   onGenerate,
+  isGenerating = false,
 }: CreationInputProps) {
   const [inputText, setInputText] = useState(defaultValue);
   const [isFocused, setIsFocused] = useState(false);
@@ -78,15 +78,6 @@ export default function CreationInput({
   });
 
   // 类型选择分类
-  const contentTypesByCategory = useMemo(() => {
-    return CONTENT_TYPE_OPTIONS.reduce((acc, opt) => {
-      if (!acc[opt.category]) acc[opt.category] = [];
-      acc[opt.category].push(opt);
-      return acc;
-    }, {} as Record<string, ContentTypeOption[]>);
-  }, []);
-
-  // 打开弹窗
   const openModal = (modal: typeof activeModal) => {
     setActiveModal(modal);
     if (modal === 'format') {
@@ -239,6 +230,7 @@ export default function CreationInput({
         {/* Generate Button - 主操作 */}
         <button
           onClick={handleGenerate}
+          disabled={isGenerating}
           className="focus-ring relative overflow-hidden h-9 lg:h-11 px-5 lg:px-7 rounded-lg bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-primary-dim)] text-white text-sm lg:text-base font-semibold flex items-center gap-2 hover:shadow-xl hover:shadow-[var(--accent-primary)]/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-300 whitespace-nowrap group/generate"
         >
           {/* 背景动画 */}
@@ -246,7 +238,7 @@ export default function CreationInput({
 
           {/* 闪烁星星 */}
           <Sparkles size={16} className="relative z-10 animate-pulse" />
-          <span className="relative z-10">AI 生成</span>
+          <span className="relative z-10">{isGenerating ? '生成中...' : 'AI 生成'}</span>
 
           {/* 高光扫过 */}
           <span

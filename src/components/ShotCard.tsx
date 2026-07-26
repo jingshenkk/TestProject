@@ -3,6 +3,7 @@ import { Edit2, Clock, Move, Film } from 'lucide-react';
 // 分镜数据类型
 export interface Shot {
   id: string;
+  backendId?: number;
   code: string;
   type: string;
   movement: string;

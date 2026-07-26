@@ -1,6 +1,9 @@
 import { MoreHorizontal, Play, Clock, FolderOpen, Film } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { sampleProjects, type Project } from '@/mocks/projects';
+import { useQuery } from '@tanstack/react-query';
+import { fetchProjects } from '@/api/projects';
+import { setSelectedProject } from '@/stores/selectedProject';
+import type { Project } from '@/types/project';
 
 /**
  * 首页「最近个人项目」
@@ -11,8 +14,11 @@ import { sampleProjects, type Project } from '@/mocks/projects';
  */
 export default function RecentProjects() {
   const navigate = useNavigate();
+  const projectsQuery = useQuery({ queryKey: ['projects'], queryFn: fetchProjects });
+  const projects = projectsQuery.data || [];
 
   const handleOpenProject = (project: Project) => {
+    setSelectedProject(project);
     navigate('/video', { state: { project } });
   };
 
@@ -43,8 +49,8 @@ export default function RecentProjects() {
       </div>
 
       {/* Project Cards - Responsive Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 lg:gap-4">
-        {sampleProjects.map((project, index) => (
+      {projectsQuery.isLoading ? <p className="text-sm text-[var(--text-secondary)]">正在加载最近项目...</p> : <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 lg:gap-4">
+        {projects.map((project, index) => (
           <div
             key={project.id}
             role="button"
@@ -103,7 +109,7 @@ export default function RecentProjects() {
             </div>
           </div>
         ))}
-      </div>
+      </div>}
     </section>
   );
 }

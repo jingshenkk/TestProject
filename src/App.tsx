@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import AppLayout from '@/components/AppLayout';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import RouteSkeleton from '@/components/RouteSkeleton';
+import AuthGate from '@/components/AuthGate';
 
 // P3-2：页面懒加载，配合 Suspense + RouteSkeleton 实现按路由分块与加载态兜底
 const HomePage = lazy(() => import('@/pages/HomePage'));
@@ -40,6 +41,7 @@ function App() {
   return (
     <BrowserRouter>
       {/* P0：统一布局壳 AppLayout（Sidebar + 内容区），路由作为其子级由 <Outlet/> 渲染 */}
+      <AuthGate>
       <AppLayout>
         {/* Main Content：ErrorBoundary 兜渲染异常，Suspense 兜懒加载 chunk */}
         <ErrorBoundary>
@@ -63,6 +65,7 @@ function App() {
           </Suspense>
         </ErrorBoundary>
       </AppLayout>
+      </AuthGate>
     </BrowserRouter>
   );
 }

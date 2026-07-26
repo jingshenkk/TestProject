@@ -37,16 +37,14 @@ export default function ProcessStepBar() {
             <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:translate-x-full transition-transform duration-700" />
 
             {/* 图标 */}
-            <span className={`transition-all duration-300 ${({ isActive }: { isActive: boolean }) => isActive ? 'text-white' : 'text-[var(--text-muted)]'}`}>
+            <span className="transition-all duration-300 text-[var(--text-muted)]">
               {step.icon}
             </span>
 
             <span className="relative z-10">{step.label}</span>
 
             {/* 激活指示器 */}
-            {({ isActive }: { isActive: boolean }) => isActive && (
-              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-0.5 bg-white/50 rounded-full" />
-            )}
+
           </NavLink>
 
           {/* Arrow (not for last step) */}

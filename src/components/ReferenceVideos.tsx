@@ -4,7 +4,7 @@ import { Play, Film, Eye, Clock } from 'lucide-react';
 
 export default function ReferenceVideos() {
   const [activeCategory, setActiveCategory] = useState('全部');
-  const [_hoveredVideo, setHoveredVideo] = useState<string | null>(null);
+  const [_hoveredVideo, setHoveredVideo] = useState<number | null>(null);
 
   return (
     <section className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
