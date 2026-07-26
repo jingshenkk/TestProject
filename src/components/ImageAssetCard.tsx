@@ -1,4 +1,3 @@
-import { Layers } from 'lucide-react';
 import type { Asset } from '@/types/asset';
 
 interface ImageAssetCardProps {
@@ -23,15 +22,7 @@ export default function ImageAssetCard({ asset, onClick }: ImageAssetCardProps) 
       {/* Image Preview Area */}
       <div className="aspect-[4/3] bg-[var(--bg-surface)] relative overflow-hidden">
         {asset.hasImage && asset.imageUrl ? (
-          <div className="w-full h-full flex items-center justify-center">
-            {/* Placeholder for actual image */}
-            <div className="text-center">
-              <div className="w-20 h-20 mx-auto mb-2 rounded-lg bg-[var(--accent-primary)]/10 flex items-center justify-center">
-                <Layers size={32} className="text-[var(--accent-primary)]" />
-              </div>
-              <span className="text-xs text-[var(--text-muted)]">预览图</span>
-            </div>
-          </div>
+          <img src={asset.imageUrl} alt={asset.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <div className="text-center">

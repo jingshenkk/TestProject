@@ -7,6 +7,7 @@ import Modal from '@/components/Modal';
 import { createProject, deleteProject, fetchProjects, updateProject } from '@/api/projects';
 import { setSelectedProject as setCurrentProject } from '@/stores/selectedProject';
 import type { Project } from '@/types/project';
+import { localDemoProjects, toMockWorkspaceProject, type LocalDemoProject } from '@/mocks/localDemoProjects';
 
 // 删除确认弹窗
 interface DeleteConfirmModalProps {
@@ -285,6 +286,33 @@ function ProjectCard({ project, onDelete, onRename }: ProjectCardProps) {
 }
 
 // 创建项目卡片
+function LocalDemoProjectCard({ project, onOpen }: { project: LocalDemoProject; onOpen: (project: LocalDemoProject) => void }) {
+  const open = () => onOpen(project);
+  return (
+    <article role="button" tabIndex={0} onClick={open} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(); } }} className="glass-card overflow-hidden relative border border-[var(--accent-primary)]/20 cursor-pointer group">
+      <div className="aspect-[16/9] bg-[var(--bg-surface)] relative overflow-hidden">
+        {project.previewVideo ? (
+          <video src={project.previewVideo} poster={project.coverImage} muted loop autoPlay playsInline preload="metadata" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+        ) : (
+          <img src={project.coverImage} alt={project.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+        <span className="absolute top-3 left-3 rounded-full border border-white/25 bg-black/45 px-2.5 py-1 text-[10px] font-semibold tracking-[0.1em] text-white backdrop-blur">LOCAL MOCK</span>
+        {project.previewVideo && <span className="absolute bottom-3 right-3 rounded-full bg-[var(--accent-primary)] px-2.5 py-1 text-[10px] font-semibold text-white">可播放样片</span>}
+        <span className="absolute bottom-3 left-3 rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur opacity-0 transition-opacity group-hover:opacity-100">进入样例创作</span>
+      </div>
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div><h3 className="text-base font-semibold text-[var(--text-primary)]">{project.name}</h3><p className="mt-1 text-xs text-[var(--text-muted)]">{project.updatedAt}</p></div>
+          <span className="shrink-0 rounded bg-[var(--accent-primary-bg)] px-2 py-1 text-[10px] font-medium text-[var(--accent-primary)]">样例</span>
+        </div>
+        <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">{project.description}</p>
+        <p className="mt-3 border-t border-[var(--border-subtle)] pt-3 text-xs text-[var(--text-muted)]">{project.assetSummary}</p>
+      </div>
+    </article>
+  );
+}
+
 interface CreateProjectCardProps {
   onCreate: () => void;
 }
@@ -381,6 +409,11 @@ export default function ProjectsPage() {
     if (!selectedProject) return;
     renameMutation.mutate({ id: selectedProject.id, name }, { onSuccess: () => { setRenameModalOpen(false); setSelectedProject(null); } });
   };
+  const handleOpenLocalDemoProject = (demoProject: LocalDemoProject) => {
+    const mockProject = toMockWorkspaceProject(demoProject);
+    setCurrentProject(mockProject);
+    navigate('/video', { state: { project: mockProject } });
+  };
   const error = projectsQuery.error || deleteMutation.error || renameMutation.error || createMutation.error;
   const errorMessage = error instanceof Error ? error.message : '';
 
@@ -389,12 +422,22 @@ export default function ProjectsPage() {
       <AppHeader title="项目管理" showBack={false} zIndex="z-40" />
       <main className="flex-1 p-4 lg:p-8 overflow-auto">
         {errorMessage && <p className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-500">{errorMessage}</p>}
-        {projectsQuery.isLoading ? <p className="text-sm text-[var(--text-secondary)]">正在加载项目...</p> : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            <CreateProjectCard onCreate={() => setCreateModalOpen(true)} />
-            {(projectsQuery.data || []).map((project) => <ProjectCard key={project.id} project={project} onDelete={handleDelete} onRename={handleRename} />)}
+        <section className="mb-8">
+          <div className="mb-4 flex items-end justify-between gap-4">
+            <div><p className="text-[10px] font-semibold tracking-[0.12em] text-[var(--accent-primary)]">LOCAL SHOWCASE</p><h2 className="mt-1 text-lg font-semibold text-[var(--text-primary)]">本地 Mock 项目</h2><p className="mt-1 text-sm text-[var(--text-secondary)]">保留旧项目样例的真实图片与视频素材，点击可进入本地样例创作界面，不会写入后端项目台账。</p></div>
+            <span className="rounded-full bg-[var(--accent-primary-bg)] px-3 py-1 text-xs text-[var(--accent-primary)]">{localDemoProjects.length} 个样例</span>
           </div>
-        )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">{localDemoProjects.map((project) => <LocalDemoProjectCard key={project.id} project={project} onOpen={handleOpenLocalDemoProject} />)}</div>
+        </section>
+        <section>
+          <div className="mb-4 flex items-end justify-between gap-4"><div><p className="text-[10px] font-semibold tracking-[0.12em] text-[var(--accent-primary)]">PROJECT WORKSPACE</p><h2 className="mt-1 text-lg font-semibold text-[var(--text-primary)]">真实项目</h2></div></div>
+          {projectsQuery.isLoading ? <p className="text-sm text-[var(--text-secondary)]">正在加载项目...</p> : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <CreateProjectCard onCreate={() => setCreateModalOpen(true)} />
+              {(projectsQuery.data || []).map((project) => <ProjectCard key={project.id} project={project} onDelete={handleDelete} onRename={handleRename} />)}
+            </div>
+          )}
+        </section>
       </main>
       <DeleteConfirmModal isOpen={deleteModalOpen} projectName={selectedProject?.name || ''} onConfirm={confirmDelete} onCancel={() => { setDeleteModalOpen(false); setSelectedProject(null); }} />
       <RenameModal isOpen={renameModalOpen} projectName={selectedProject?.name || ''} onConfirm={confirmRename} onCancel={() => { setRenameModalOpen(false); setSelectedProject(null); }} />

@@ -34,6 +34,14 @@ export async function login(username: string, password: string): Promise<Current
   return response.user;
 }
 
+export async function register(username: string, password: string, displayName: string): Promise<CurrentUser> {
+  const response = await apiRequest<LoginResponse>('/api/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ username, password, display_name: displayName }),
+  });
+  return response.user;
+}
+
 export async function logout(): Promise<void> {
   await apiRequest('/api/auth/logout', { method: 'POST' });
 }

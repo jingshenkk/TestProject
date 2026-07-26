@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchProjects } from '@/api/projects';
 import { setSelectedProject } from '@/stores/selectedProject';
 import type { Project } from '@/types/project';
+import { localDemoProjects, toMockWorkspaceProject } from '@/mocks/localDemoProjects';
 
 /**
  * 首页「最近个人项目」
@@ -15,7 +16,9 @@ import type { Project } from '@/types/project';
 export default function RecentProjects() {
   const navigate = useNavigate();
   const projectsQuery = useQuery({ queryKey: ['projects'], queryFn: fetchProjects });
-  const projects = projectsQuery.data || [];
+  // Local demos are read-only, but use the same entry path as real projects.
+  // Keeping them first preserves a usable creation entry point for an empty database.
+  const projects = [...localDemoProjects.map(toMockWorkspaceProject), ...(projectsQuery.data || [])];
 
   const handleOpenProject = (project: Project) => {
     setSelectedProject(project);
@@ -49,7 +52,7 @@ export default function RecentProjects() {
       </div>
 
       {/* Project Cards - Responsive Grid */}
-      {projectsQuery.isLoading ? <p className="text-sm text-[var(--text-secondary)]">正在加载最近项目...</p> : <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 lg:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 lg:gap-4">
         {projects.map((project, index) => (
           <div
             key={project.id}
@@ -109,7 +112,8 @@ export default function RecentProjects() {
             </div>
           </div>
         ))}
-      </div>}
+      </div>
+      {projectsQuery.isLoading && <p className="mt-3 text-xs text-[var(--text-muted)]">正在同步真实项目...</p>}
     </section>
   );
 }

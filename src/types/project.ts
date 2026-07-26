@@ -12,4 +12,5 @@ export interface Project {
   visualStyle?: string | null;
   episodeCount: number;
   episodeDurationSec: number;
+  isMock?: boolean;
 }

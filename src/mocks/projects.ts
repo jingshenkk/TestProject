@@ -13,7 +13,7 @@ export const sampleProjects: Project[] = [
   {
     id: '1',
     name: '三体 2 终极之战',
-    coverImage: '/project-cover-1.jpg',
+    coverImage: '/mock/legacy/scene-changan-garden.png',
     lastUpdated: '2026-07-20 13:30',
   },
   {

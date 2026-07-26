@@ -6,6 +6,8 @@ import AppHeader from '@/components/AppHeader';
 import { fetchImageAssets, fetchVideoGenShots, fetchVideoTask, fetchVideoVersions, submitVideoGeneration } from '@/api/videoGen';
 import { imageAssetUrl } from '@/api/imageAssets';
 import { getSelectedProject } from '@/stores/selectedProject';
+import { sampleShots as mockVideoShots, videoVersions } from '@/mocks/videoGen';
+import { showcaseMedia } from '@/mocks/showcaseMedia';
 
 function assetKind(assetType: string): 'character' | 'scene' | 'prop' {
   if (assetType.includes('character') || assetType.includes('emotion')) return 'character';
@@ -15,14 +17,17 @@ function assetKind(assetType: string): 'character' | 'scene' | 'prop' {
 
 export default function VideoGenPage() {
   const project = getSelectedProject();
+  const isMockProject = Boolean(project?.isMock);
+  const [selectedMockShotId, setSelectedMockShotId] = useState(mockVideoShots[0]?.id ?? '');
+  const [mockNotice, setMockNotice] = useState('');
   const queryClient = useQueryClient();
   const [selectedShotId, setSelectedShotId] = useState<number | null>(null);
   const [selectedVersionId, setSelectedVersionId] = useState<number | null>(null);
   const [prompt, setPrompt] = useState('');
   const [activeTaskId, setActiveTaskId] = useState<number | null>(null);
-  const shotsQuery = useQuery({ queryKey: ['video-shots', project?.id], queryFn: () => fetchVideoGenShots(project!.id), enabled: Boolean(project) });
-  const imagesQuery = useQuery({ queryKey: ['images', project?.id], queryFn: () => fetchImageAssets(project!.id), enabled: Boolean(project) });
-  const videoQuery = useQuery({ queryKey: ['video-versions', project?.id, selectedShotId], queryFn: () => fetchVideoVersions(project!.id, selectedShotId || undefined), enabled: Boolean(project && selectedShotId) });
+  const shotsQuery = useQuery({ queryKey: ['video-shots', project?.id], queryFn: () => fetchVideoGenShots(project!.id), enabled: Boolean(project && !isMockProject) });
+  const imagesQuery = useQuery({ queryKey: ['images', project?.id], queryFn: () => fetchImageAssets(project!.id), enabled: Boolean(project && !isMockProject) });
+  const videoQuery = useQuery({ queryKey: ['video-versions', project?.id, selectedShotId], queryFn: () => fetchVideoVersions(project!.id, selectedShotId || undefined), enabled: Boolean(project && selectedShotId && !isMockProject) });
   const taskQuery = useQuery({ queryKey: ['video-task', activeTaskId], queryFn: () => fetchVideoTask(activeTaskId!), enabled: Boolean(activeTaskId), refetchInterval: (query) => query.state.data?.status === 'queued' || query.state.data?.status === 'running' ? 1500 : false });
   const generateMutation = useMutation({
     mutationFn: (shotId: number) => submitVideoGeneration(shotId, { referenceAssetIds: (imagesQuery.data || []).filter((asset) => asset.effective_status === 'completed' && asset.file_exists).slice(0, 6).map((asset) => asset.id), customPrompt: prompt, resolution: '1080p', aspectRatio: project?.aspectRatio || '16:9' }),
@@ -40,6 +45,33 @@ export default function VideoGenPage() {
   const errorMessage = error instanceof Error ? error.message : '';
 
   if (!project) return <div className="flex-1 flex items-center justify-center text-sm text-[var(--text-secondary)]">请先在项目页选择一个项目。</div>;
+  if (isMockProject) {
+    const selectedMockShot = mockVideoShots.find((shot) => shot.id === selectedMockShotId) ?? mockVideoShots[0];
+    const preview = showcaseMedia.find((media) => media.kind === 'video');
+    const firstFrame = showcaseMedia.find((media) => media.id === 'first-frame');
+    return (
+      <div className="flex-1 flex flex-col min-w-0 h-full">
+        <AppHeader title={project.name} subtitle="视频生成 · 本地样例" />
+        <main className="flex-1 p-4 lg:p-6 overflow-hidden flex flex-col min-h-0">
+          <ProcessStepBar />
+          <p className="mb-4 rounded-xl border border-[var(--accent-primary)]/25 bg-[var(--accent-primary-bg)] px-4 py-3 text-sm text-[var(--text-secondary)]">LOCAL MOCK · 使用本地图片与视频演示镜头选择、提示词编辑和任务状态，不会提交计费任务。</p>
+          {mockNotice && <p className="mb-4 rounded-lg border border-[var(--color-success)]/25 bg-[var(--color-success-bg)] px-4 py-3 text-sm text-[var(--color-success)]">{mockNotice}</p>}
+          {selectedMockShot && <div className="flex-1 flex gap-4 min-h-0 overflow-hidden">
+            <div className="w-[200px] flex flex-col gap-3 overflow-y-auto flex-shrink-0 pr-1">
+              {mockVideoShots.map((shot) => <button key={shot.id} onClick={() => setSelectedMockShotId(shot.id)} className={`p-3 rounded-xl border text-left transition-all ${selectedMockShot.id === shot.id ? 'bg-[var(--bg-card)] border-[var(--accent-primary)]' : 'bg-[var(--bg-card)] border-[var(--border-subtle)] hover:border-[var(--border-default)]'}`}><div className="flex items-center justify-between"><span className="text-sm font-medium text-[var(--text-primary)]">{shot.code}</span>{shot.status === 'completed' && <CheckCircle2 size={15} className="text-[var(--color-success)]" />}</div><span className="block mt-1 text-xs text-[var(--text-muted)]">{shot.duration} · {shot.progress}%</span></button>)}
+            </div>
+            <div className="flex-1 min-w-0 overflow-y-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-5">
+              <div className="mb-4 flex items-center justify-between gap-3"><div><h3 className="text-base font-semibold text-[var(--text-primary)]">{selectedMockShot.code}</h3><p className="mt-1 text-xs text-[var(--text-muted)]">{selectedMockShot.duration} · 本地样例资产参考</p></div><div className="flex flex-wrap gap-2">{videoVersions.map((version) => <button key={version.id} className={`rounded-md border px-2.5 py-1 text-xs ${version.isCurrent ? 'border-[var(--accent-primary)] bg-[var(--accent-primary-bg)] text-[var(--accent-primary)]' : 'border-[var(--border-subtle)] text-[var(--text-secondary)]'}`}>{version.name}</button>)}</div></div>
+              {preview && <video controls src={preview.src} poster={preview.poster} className="mb-4 aspect-video w-full rounded-lg bg-black object-contain" />}
+              <textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="输入本地样例提示词，体验提交前编辑..." className="min-h-36 w-full resize-y rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-input)] p-4 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]" />
+              <div className="mt-3 flex justify-end border-t border-[var(--border-subtle)] pt-3"><button onClick={() => setMockNotice(prompt.trim() ? `已记录 ${selectedMockShot.code} 的本地提示词预览。` : `已将 ${selectedMockShot.code} 标记为本地样例生成完成。`)} className="rounded-lg bg-[var(--accent-primary)] px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90">模拟本地生成</button></div>
+            </div>
+            <aside className="w-[280px] shrink-0 overflow-y-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-4"><h4 className="mb-3 text-sm font-semibold text-[var(--text-primary)]">首帧图片</h4><div className="aspect-video overflow-hidden rounded-lg bg-[var(--bg-surface)]">{firstFrame && <img src={firstFrame.src} alt="本地样例首帧" className="h-full w-full object-cover" />}</div></aside>
+          </div>}
+        </main>
+      </div>
+    );
+  }
   return (
     <div className="flex-1 flex flex-col min-w-0 h-full">
       <AppHeader title={project.name} subtitle="视频生成" />
