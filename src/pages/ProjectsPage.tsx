@@ -138,6 +138,7 @@ interface ProjectCardProps {
 function ProjectCard({ project, onDelete, onRename }: ProjectCardProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [coverFailed, setCoverFailed] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -169,41 +170,67 @@ function ProjectCard({ project, onDelete, onRename }: ProjectCardProps) {
       tabIndex={0}
       onClick={handleCardClick}
       onKeyDown={handleCardKeyDown}
-      className="bg-[var(--bg-card)] rounded-xl border border-[var(--border-subtle)] overflow-hidden cursor-pointer hover:border-[var(--accent-primary)] hover:shadow-lg transition-all duration-200 group"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="glass-card overflow-hidden cursor-pointer group relative"
     >
+      {/* 悬停辉光边框 */}
+      <div className={`absolute inset-0 rounded-xl border border-[var(--accent-primary)] transition-opacity duration-300 pointer-events-none ${isHovered ? 'opacity-40' : 'opacity-0'}`} />
+
       {/* Cover Image */}
       <div className="aspect-[16/9] bg-[var(--bg-surface)] relative overflow-hidden">
         {project.coverImage && !coverFailed ? (
           <img
             src={project.coverImage}
             alt={project.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
             onError={() => setCoverFailed(true)}
           />
         ) : (
-          /* 默认占位图（coverImage 缺失或加载失败时受控渲染，src 变更后可恢复） */
-          <div className="absolute inset-0 flex items-center justify-center">
+          /* 默认占位图 - 电影风格取景框 */
+          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[var(--bg-surface)] to-[var(--bg-input)]">
             <svg viewBox="0 0 200 120" className="w-full h-full">
-              <rect width="200" height="120" fill="var(--bg-surface)" />
-              <line x1="0" y1="0" x2="200" y2="120" stroke="var(--border-default)" strokeWidth="1" />
-              <line x1="200" y1="0" x2="0" y2="120" stroke="var(--border-default)" strokeWidth="1" />
+              <defs>
+                <linearGradient id="frameGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="var(--border-default)" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="var(--accent-primary)" stopOpacity="0.2" />
+                </linearGradient>
+              </defs>
+              <rect width="200" height="120" fill="url(#frameGrad)" />
+              {/* 十字线 */}
+              <line x1="100" y1="0" x2="100" y2="120" stroke="var(--border-default)" strokeWidth="0.5" />
+              <line x1="0" y1="60" x2="200" y2="60" stroke="var(--border-default)" strokeWidth="0.5" />
+              {/* 对角线 */}
+              <line x1="0" y1="0" x2="200" y2="120" stroke="var(--border-default)" strokeWidth="0.5" opacity="0.3" />
+              <line x1="200" y1="0" x2="0" y2="120" stroke="var(--border-default)" strokeWidth="0.5" opacity="0.3" />
+              {/* 取景框四角 */}
+              <path d="M10 25 L10 10 L25 10" stroke="var(--accent-primary)" strokeWidth="1" fill="none" opacity="0.5" />
+              <path d="M175 10 L190 10 L190 25" stroke="var(--accent-primary)" strokeWidth="1" fill="none" opacity="0.5" />
+              <path d="M10 95 L10 110 L25 110" stroke="var(--accent-primary)" strokeWidth="1" fill="none" opacity="0.5" />
+              <path d="M175 110 L190 110 L190 95" stroke="var(--accent-primary)" strokeWidth="1" fill="none" opacity="0.5" />
             </svg>
           </div>
         )}
+
+        {/* 悬停遮罩 */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--accent-primary)]/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
 
       {/* Project Info */}
       <div className="p-4">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <h3 className="text-base font-medium text-[var(--text-primary)] truncate mb-1">
+            <h3 className="text-base font-medium text-[var(--text-primary)] truncate mb-1.5 group-hover:text-[var(--accent-primary)] transition-colors">
               {project.name}
             </h3>
             {project.code && (
-              <p className="text-sm text-[var(--accent-primary)] mb-1">{project.code}</p>
+              <p className="text-xs inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[var(--accent-primary-bg)] text-[var(--accent-primary)] mb-2">
+                {project.code}
+              </p>
             )}
-            <p className="text-xs text-[var(--text-muted)]">
-              最后更新：{project.lastUpdated}
+            <p className="text-xs text-[var(--text-muted)] flex items-center gap-1.5">
+              <span className="w-1 h-1 rounded-full bg-[var(--text-muted)]" />
+              更新于 {project.lastUpdated}
             </p>
           </div>
 
@@ -214,33 +241,34 @@ function ProjectCard({ project, onDelete, onRename }: ProjectCardProps) {
                 e.stopPropagation();
                 setShowMenu(!showMenu);
               }}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-colors"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-all duration-200 hover:scale-105"
             >
               <MoreHorizontal size={18} />
             </button>
 
             {/* Dropdown Menu */}
             {showMenu && (
-              <div className="absolute right-0 top-full mt-1 bg-[var(--bg-card)] rounded-lg border border-[var(--border-subtle)] shadow-lg py-1 min-w-[100px] z-10">
+              <div className="absolute right-0 top-full mt-1 bg-[var(--bg-card)] rounded-lg border border-[var(--border-subtle)] shadow-xl py-1 min-w-[120px] z-10 animate-fade-in">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onRename(project);
                     setShowMenu(false);
                   }}
-                  className="w-full px-4 py-2 text-left text-sm text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-colors"
+                  className="w-full px-4 py-2 text-left text-sm text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-colors flex items-center gap-2"
                 >
-                  重命名
+                  <span>✎</span> 重命名
                 </button>
+                <div className="mx-2 my-1 h-px bg-[var(--border-subtle)]" />
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onDelete(project);
                     setShowMenu(false);
                   }}
-                  className="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-red-500/10 transition-colors"
+                  className="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-red-500/10 transition-colors flex items-center gap-2"
                 >
-                  删除
+                  <span>🗑</span> 删除
                 </button>
               </div>
             )}
@@ -263,12 +291,23 @@ function CreateProjectCard() {
   return (
     <button
       onClick={handleClick}
-      className="bg-[var(--bg-card)] rounded-xl border border-[var(--border-subtle)] aspect-[16/10] flex flex-col items-center justify-center gap-4 cursor-pointer hover:border-[var(--accent-primary)] hover:shadow-lg transition-all duration-200 group"
+      className="glass-card aspect-[16/10] flex flex-col items-center justify-center gap-4 cursor-pointer group relative overflow-hidden"
     >
-      <div className="w-16 h-16 rounded-full border-2 border-[var(--border-subtle)] flex items-center justify-center group-hover:border-[var(--accent-primary)] group-hover:bg-[var(--accent-primary)]/10 transition-all duration-200">
-        <Plus size={32} className="text-[var(--text-muted)] group-hover:text-[var(--accent-primary)] transition-colors" />
+      {/* 背景辉光 */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-primary)]/5 via-transparent to-[var(--accent-secondary)]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+      {/* 脉冲光环 */}
+      <div className="relative">
+        <div className="absolute inset-0 rounded-full bg-[var(--accent-primary)]/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-pulse" />
+        <div className="w-16 h-16 rounded-full border-2 border-dashed border-[var(--border-default)] flex items-center justify-center group-hover:border-[var(--accent-primary)] group-hover:bg-[var(--accent-primary)]/10 transition-all duration-300 relative">
+          <Plus size={32} className="text-[var(--text-muted)] group-hover:text-[var(--accent-primary)] transition-all duration-300 group-hover:rotate-90" />
+        </div>
       </div>
-      <span className="text-base font-medium text-[var(--text-primary)]">创建项目</span>
+
+      <span className="text-base font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors">创建项目</span>
+
+      {/* 底部提示 */}
+      <span className="text-xs text-[var(--text-muted)] opacity-0 group-hover:opacity-100 transition-opacity duration-300">开始新的创作旅程</span>
     </button>
   );
 }

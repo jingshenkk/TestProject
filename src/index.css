@@ -132,12 +132,93 @@ body {
   50% { box-shadow: 0 0 20px 4px rgba(59, 164, 255, 0.2); }
 }
 
+/* 侧边栏辉光呼吸 */
+@keyframes sidebar-breathe {
+  0%, 100% { opacity: 0.03; }
+  50% { opacity: 0.08; }
+}
+
+/* 微光扫过 */
+@keyframes shimmer-sweep {
+  0% { transform: translateX(-100%) rotate(25deg); }
+  100% { transform: translateX(200%) rotate(25deg); }
+}
+
+/* 自然缩放入场 - 使用 expo 缓动 */
+@keyframes natural-scale {
+  0% { transform: scale(0.96); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* 光晕扩散 */
+@keyframes glow-expand {
+  0% { box-shadow: 0 0 0 0 rgba(59, 164, 255, 0.5); }
+  100% { box-shadow: 0 0 0 8px rgba(59, 164, 255, 0); }
+}
+
+/* CTA 高光扫过：仅在已带 overflow-hidden 的按钮上层放一个 .cta-shimmer span 即可 */
+@keyframes cta-shimmer {
+  0% { transform: translateX(-130%) skewX(-18deg); }
+  100% { transform: translateX(260%) skewX(-18deg); }
+}
+
+/* 空封面内部辉光缓动，呼应 cinematic 品牌 */
+@keyframes aurora-float {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.55; }
+  50% { transform: translate3d(0, -5%, 0) scale(1.08); opacity: 0.85; }
+}
+
 .animate-fade-in {
-  animation: fadeIn 0.4s var(--ease-out-expo) forwards;
+  animation: fadeIn 0.5s var(--ease-out-expo) forwards;
 }
 
 .animate-slide-in {
-  animation: slideInLeft 0.5s var(--ease-out-expo) forwards;
+  animation: slideInLeft 0.6s var(--ease-out-expo) forwards;
+}
+
+.animate-spring {
+  animation: natural-scale 0.35s var(--ease-out-expo) forwards;
+}
+
+.animate-glow-pulse {
+  animation: glow-expand 0.6s var(--ease-out-expo) forwards;
+}
+
+/* 交错延迟工具类 */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+
+/* 键盘聚焦环：与品牌蓝一致，圆角跟随容器；仅 focus-visible 触发，鼠标点击不显示 */
+@utility focus-ring {
+  outline: none;
+  &:focus-visible {
+    box-shadow: 0 0 0 2px var(--bg-root), 0 0 0 4px var(--accent-primary);
+  }
+}
+
+/* CTA 内层高光条：定位 absolute + pointer-events-none，配合 overflow-hidden 按钮使用 */
+@utility cta-shimmer-bar {
+  position: absolute;
+  inset: 0 auto 0 -40%;
+  width: 35%;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.45),
+    transparent
+  );
+  animation: cta-shimmer 2.8s var(--ease-in-out) infinite;
+}
+
+/* 空封面胶片纹理：纯 CSS 十字 + 对角线，与 ReferenceVideos 同源语言 */
+@utility empty-frame {
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.018), transparent 60%),
+    radial-gradient(circle at 50% 50%, rgba(59, 164, 255, 0.05), transparent 65%);
 }
 
 /* ── Utility Classes ───────────────────────────────────────── */
@@ -154,13 +235,23 @@ body {
   background: var(--surface-gradient-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  transition: all var(--duration-normal) var(--ease-out-expo);
+  transition:
+    transform var(--duration-normal) var(--ease-out-expo),
+    box-shadow var(--duration-normal) var(--ease-out-expo),
+    border-color var(--duration-fast) var(--ease-in-out);
 
   &:hover {
     background: var(--surface-gradient-elevated);
-    border-color: var(--border-default);
-    box-shadow: var(--shadow-card-hover);
-    transform: translateY(-2px);
+    border-color: var(--border-accent);
+    box-shadow:
+      var(--shadow-card-hover),
+      0 0 20px rgba(59, 164, 255, 0.1);
+    transform: translateY(-3px);
+  }
+
+  &:active {
+    transform: translateY(-1px) scale(0.995);
+    transition-duration: var(--duration-fast);
   }
 }
 

@@ -68,36 +68,54 @@ export default function VideoGenPage() {
         <div className="flex-1 flex gap-4 min-h-0 overflow-hidden">
           {/* Left Column - Shot List (200px fixed) */}
           <div className="w-[200px] flex flex-col gap-3 overflow-y-auto flex-shrink-0 pr-1">
-            {sampleShots.map((shot) => (
+            {sampleShots.map((shot, index) => (
               <button
                 key={shot.id}
                 onClick={() => setSelectedShotId(shot.id)}
-                className={`p-3 rounded-xl border transition-all duration-200 text-left ${
+                className={`p-3 rounded-xl border transition-all duration-300 text-left relative overflow-hidden group animate-fade-in ${
                   selectedShotId === shot.id
-                    ? 'bg-[var(--bg-card)] border-[var(--accent-primary)] ring-1 ring-[var(--accent-primary)]'
-                    : 'bg-[var(--bg-card)] border-[var(--border-subtle)] hover:border-[var(--border-default)]'
+                    ? 'bg-[var(--bg-card)] border-[var(--accent-primary)] shadow-lg shadow-[var(--accent-primary)]/10'
+                    : 'bg-[var(--bg-card)] border-[var(--border-subtle)] hover:border-[var(--border-default)] hover:shadow-md'
                 }`}
+                style={{ animationDelay: `${index * 0.05}s` }}
               >
+                {/* 选中指示器 */}
+                {selectedShotId === shot.id && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-r-full bg-[var(--accent-primary)]" />
+                )}
+
+                {/* 悬停辉光 */}
+                <div className="absolute inset-0 bg-gradient-to-r from-[var(--accent-primary)]/0 via-[var(--accent-primary)]/5 to-[var(--accent-primary)]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
                 {/* Shot Header */}
-                <div className="flex items-center gap-2 mb-2">
-                  <span className={`text-xs ${selectedShotId === shot.id ? 'text-[var(--accent-primary)]' : 'text-[var(--text-muted)]'}`}>
+                <div className="flex items-center gap-2 mb-2 relative z-10">
+                  <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${selectedShotId === shot.id ? 'bg-[var(--accent-primary-bg)] text-[var(--accent-primary)]' : 'text-[var(--text-muted)]'}`}>
                     {shot.code}
                   </span>
                   <span className="text-xs text-[var(--text-muted)]">{shot.duration}</span>
                   {shot.status === 'generating' && (
-                    <span className="w-5 h-5 rounded-full bg-blue-500 text-white text-[10px] flex items-center justify-center">
+                    <span className="w-5 h-5 rounded-full bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-primary-dim)] text-white text-[10px] flex items-center justify-center animate-pulse">
                       {shot.progress}%
                     </span>
                   )}
                   {shot.status === 'completed' && (
-                    <CheckCircle2 size={14} className="text-green-500" />
+                    <CheckCircle2 size={14} className="text-[var(--color-success)]" />
                   )}
                 </div>
 
                 {/* Preview Placeholder */}
-                <div className="aspect-[4/3] bg-[var(--bg-surface)] rounded-lg flex items-center justify-center relative">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    shot.status === 'completed' ? 'bg-[var(--accent-primary)]' : 'bg-[var(--bg-input)]'
+                <div className="aspect-[4/3] bg-[var(--bg-surface)] rounded-lg flex items-center justify-center relative overflow-hidden">
+                  {/* 取景框效果 */}
+                  <div className="absolute inset-0 opacity-30">
+                    <div className="absolute top-2 left-2 w-3 h-3 border-l border-t border-[var(--accent-primary)]" />
+                    <div className="absolute top-2 right-2 w-3 h-3 border-r border-t border-[var(--accent-primary)]" />
+                    <div className="absolute bottom-2 left-2 w-3 h-3 border-l border-b border-[var(--accent-primary)]" />
+                    <div className="absolute bottom-2 right-2 w-3 h-3 border-r border-b border-[var(--accent-primary)]" />
+                  </div>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                    shot.status === 'completed'
+                      ? 'bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-primary-dim)] shadow-lg shadow-[var(--accent-primary)]/30'
+                      : 'bg-[var(--bg-input)]'
                   }`}>
                     <Play size={18} className={shot.status === 'completed' ? 'text-white' : 'text-[var(--text-muted)]'} fill="currentColor" />
                   </div>
@@ -109,27 +127,69 @@ export default function VideoGenPage() {
           {/* Middle Column - Main Content (flex-1) */}
           <div className="flex-1 flex flex-col gap-4 min-w-0 overflow-y-auto">
             {/* Shot Info Card */}
-            <div className="bg-[var(--bg-card)] rounded-xl p-4 border border-[var(--border-subtle)]">
-              <div className="flex items-center gap-3 mb-2">
-                <span className="text-lg font-medium text-[var(--text-primary)]">{selectedShot?.code}</span>
-                <span className="text-sm text-[var(--text-muted)]">{selectedShot?.duration}</span>
-                <span className="text-sm text-[var(--text-muted)]">中近景 · 固定 · 12.6s</span>
+            <div className="glass-panel p-4 relative overflow-hidden">
+              {/* 顶部装饰线 */}
+              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[var(--accent-primary)] via-[var(--accent-secondary)] to-[var(--accent-primary)] opacity-50" />
+
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-lg font-semibold text-[var(--accent-primary)] px-2 py-0.5 rounded-lg bg-[var(--accent-primary-bg)]">
+                  {selectedShot?.code}
+                </span>
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-[var(--bg-surface)]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-secondary)]" />
+                  <span className="text-sm text-[var(--text-secondary)]">{selectedShot?.duration}</span>
+                </div>
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-[var(--bg-surface)]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-tertiary)]" />
+                  <span className="text-sm text-[var(--text-secondary)]">中近景 · 固定 · 12.6s</span>
+                </div>
               </div>
-              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed pl-1 border-l-2 border-[var(--accent-primary)]/30">
                 花圃牡丹在前景虚化，湘夫人侧立花前，手指轻抚花瓣，面容沉静。背景中李公子的暗红身影从竹帘后隐约浮现。
               </p>
             </div>
 
             {/* Video Preview Area */}
-            <div className="flex-1 bg-[var(--bg-card)] rounded-xl border border-[var(--border-subtle)] flex items-center justify-center min-h-[300px] relative overflow-hidden">
+            <div className="flex-1 glass-panel flex items-center justify-center min-h-[300px] relative overflow-hidden group">
+              {/* 动态背景 */}
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--bg-card)] via-[var(--bg-surface)] to-[var(--bg-input)]" />
+
+              {/* 取景框效果 */}
+              <div className="absolute inset-4 border border-[var(--border-subtle)] rounded-lg opacity-50">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-2 bg-[var(--bg-card)] text-[10px] text-[var(--text-muted)]">
+                  REC
+                </div>
+                {/* 四角标记 */}
+                <div className="absolute -top-1 -left-1 w-4 h-4 border-l-2 border-t-2 border-[var(--accent-primary)]" />
+                <div className="absolute -top-1 -right-1 w-4 h-4 border-r-2 border-t-2 border-[var(--accent-primary)]" />
+                <div className="absolute -bottom-1 -left-1 w-4 h-4 border-l-2 border-b-2 border-[var(--accent-primary)]" />
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 border-r-2 border-b-2 border-[var(--accent-primary)]" />
+              </div>
+
               {/* Play Button Center */}
-              <div className="text-center">
-                <div className="w-16 h-16 rounded-full bg-black/80 flex items-center justify-center mb-4 mx-auto cursor-pointer hover:scale-110 transition-transform">
-                  <Play size={32} className="text-white ml-1" fill="white" />
+              <div className="text-center relative z-10">
+                <div className="relative">
+                  {/* 脉冲光环 */}
+                  <div className="absolute inset-0 rounded-full bg-[var(--accent-primary)]/20 animate-ping" style={{ animationDuration: '2s' }} />
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-primary-dim)] flex items-center justify-center mb-4 mx-auto cursor-pointer hover:scale-110 hover:shadow-xl hover:shadow-[var(--accent-primary)]/40 transition-all duration-300 relative shadow-lg shadow-[var(--accent-primary)]/20">
+                    <Play size={32} className="text-white ml-1" fill="white" />
+                  </div>
                 </div>
                 <p className="text-sm text-[var(--text-muted)]">
                   {hasGeneratedVideo ? '点击播放视频' : '暂未生成视频'}
                 </p>
+                {!hasGeneratedVideo && (
+                  <p className="text-xs text-[var(--accent-primary)] mt-2">选择左侧分镜并点击生成</p>
+                )}
+              </div>
+
+              {/* 底部信息条 */}
+              <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-[10px] text-[var(--text-muted)]">
+                <span>00:00:00</span>
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                  <span>LIVE</span>
+                </div>
               </div>
             </div>
 
@@ -160,27 +220,37 @@ export default function VideoGenPage() {
             )}
 
             {/* Prompt Input Area */}
-            <div className="bg-[var(--bg-card)] rounded-xl border border-[var(--border-subtle)] p-4">
+            <div className="glass-panel p-4 relative group">
+              {/* 聚焦边框效果 */}
+              <div className="absolute inset-0 rounded-xl border border-[var(--accent-primary)]/0 group-focus-within:border-[var(--accent-primary)]/30 transition-all duration-300 pointer-events-none" />
+
               <textarea
-                className="w-full bg-transparent text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] resize-none border-none outline-none"
+                className="w-full bg-transparent text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] resize-none border-none outline-none leading-relaxed"
                 rows={4}
                 defaultValue="特写，固定机位，焦点从一枚从枝头自行落下的橘子，转移到它落入枯叶中的轻微动态。在屈原的橘园，风吹过橘林。画面采用低调光，色调沉郁，焦段为135mm长焦镜头，背景中的【湘夫人·主角】身影虚化，他没有去看落下的橘子，保持着原有的姿态。画面中所有角色全程不说话。"
               />
               <div className="flex items-center justify-end gap-3 mt-3 pt-3 border-t border-[var(--border-subtle)]">
+                <span className="text-xs text-[var(--text-muted)] mr-auto flex items-center gap-1">
+                  <span className="w-1 h-1 rounded-full bg-[var(--color-success)]" />
+                  AI 模型就绪
+                </span>
+
                 {!hasGeneratedVideo ? (
                   <button
                     onClick={() => setHasGeneratedVideo(true)}
-                    className="px-6 py-2.5 rounded-lg text-sm font-medium bg-[var(--accent-primary)] text-white hover:opacity-90 transition-opacity"
+                    className="px-6 py-2.5 rounded-lg text-sm font-semibold bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-primary-dim)] text-white hover:shadow-lg hover:shadow-[var(--accent-primary)]/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-300 flex items-center gap-2 group/btn"
                   >
-                    生成
+                    <span className="relative z-10">开始生成</span>
+                    <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover/btn:translate-x-full transition-transform duration-700" />
                   </button>
                 ) : (
                   <>
-                    <button className="px-4 py-2 rounded-lg text-sm font-medium bg-[var(--bg-surface)] text-[var(--text-secondary)] border border-[var(--border-subtle)] hover:text-[var(--text-primary)] transition-colors">
+                    <button className="px-4 py-2.5 rounded-lg text-sm font-medium bg-[var(--bg-surface)] text-[var(--text-secondary)] border border-[var(--border-subtle)] hover:text-[var(--text-primary)] hover:border-[var(--accent-primary)]/50 transition-all duration-200">
                       原提示词
                     </button>
-                    <button className="px-6 py-2.5 rounded-lg text-sm font-medium bg-[var(--accent-primary)] text-white hover:opacity-90 transition-opacity">
-                      生成
+                    <button className="px-6 py-2.5 rounded-lg text-sm font-semibold bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-primary-dim)] text-white hover:shadow-lg hover:shadow-[var(--accent-primary)]/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-300 flex items-center gap-2 group/btn">
+                      <span className="relative z-10">重新生成</span>
+                      <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover/btn:translate-x-full transition-transform duration-700" />
                     </button>
                   </>
                 )}

@@ -74,17 +74,24 @@ export default function Modal({
 
   return (
     <div
-      className={`fixed inset-0 ${zIndex} flex items-center justify-center bg-black/50 backdrop-blur-sm`}
+      className={`fixed inset-0 ${zIndex} flex items-center justify-center bg-black/60 backdrop-blur-sm transition-all duration-300 animate-fade-in`}
+      style={{ animationDuration: '0.2s' }}
       onClick={(e) => {
         if (closeOnBackdropClick && e.target === e.currentTarget) onClose();
       }}
     >
+      {/* 背景辉光 */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-[var(--accent-primary)]/5 rounded-full blur-3xl" />
+      </div>
+
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label={ariaLabel}
-        className={panelClassName}
+        className={`${panelClassName} relative animate-spring`}
+        style={{ animationDuration: '0.3s' }}
         onClick={(e) => e.stopPropagation()}
       >
         {children}
