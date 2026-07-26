@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
-import Sidebar from '@/components/Sidebar';
+import AppLayout from '@/components/AppLayout';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import RouteSkeleton from '@/components/RouteSkeleton';
 
@@ -39,10 +39,8 @@ function NotFound() {
 function App() {
   return (
     <BrowserRouter>
-      <div className="flex min-h-screen w-full bg-[var(--bg-root)]">
-        {/* Left Sidebar */}
-        <Sidebar />
-
+      {/* P0：统一布局壳 AppLayout（Sidebar + 内容区），路由作为其子级由 <Outlet/> 渲染 */}
+      <AppLayout>
         {/* Main Content：ErrorBoundary 兜渲染异常，Suspense 兜懒加载 chunk */}
         <ErrorBoundary>
           <Suspense fallback={<RouteSkeleton />}>
@@ -64,7 +62,7 @@ function App() {
             </Routes>
           </Suspense>
         </ErrorBoundary>
-      </div>
+      </AppLayout>
     </BrowserRouter>
   );
 }

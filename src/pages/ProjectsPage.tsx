@@ -154,7 +154,8 @@ function ProjectCard({ project, onDelete, onRename }: ProjectCardProps) {
   }, []);
 
   const handleCardClick = () => {
-    navigate('/video'); // 点击进入视频模块
+    // 点击进入视频模块，并携带当前 project，供 VideoPage 判定已选择项目
+    navigate('/video', { state: { project } });
   };
 
   const handleCardKeyDown = (e: React.KeyboardEvent) => {
@@ -284,8 +285,16 @@ function CreateProjectCard() {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    // 创建新项目并进入视频模块
-    navigate('/video');
+    // 创建新项目并进入视频模块；携带一个新建项目占位，避免 VideoPage 落入"未选择项目"空态
+    navigate('/video', {
+      state: {
+        project: {
+          id: `new-${Date.now()}`,
+          name: '未命名项目',
+          lastUpdated: new Date().toLocaleString('zh-CN', { hour12: false }),
+        },
+      },
+    });
   };
 
   return (

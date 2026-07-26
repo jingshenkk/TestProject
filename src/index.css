@@ -3,9 +3,12 @@
 /* ═══════════════════════════════════════════════════════════════
    蚂蚁视界 ANT VISION — Design System v2.0
    Professional dark theme · Cinematic palette · Glass morphism
+
+   P0 重建：从老前端整体迁移 token 层 + 组件层 + 主题变量，
+   使新前端重新具备“组件类 + token 阶 + 主题层”的设计系统底座。
    ═══════════════════════════════════════════════════════════════ */
 
-/* ── Design Tokens ─────────────────────────────────────────── */
+/* ── Design Tokens（迁移自老前端，补齐语义层 / 状态层 / 字号阶）── */
 :root {
   /* Core backgrounds */
   --bg-root: #090b0e;
@@ -16,6 +19,9 @@
   --bg-elevated: #1d252e;
   --bg-overlay: rgba(2, 5, 8, 0.74);
   --bg-input: #0d1116;
+  --bg-table-head: #0d1116;
+  --bg-media: #050607;
+  --bg-row-hover: rgba(255, 255, 255, 0.025);
   --bg-track: rgba(255, 255, 255, 0.07);
   --chrome-sidebar: #0b0e12;
   --chrome-topbar: rgba(11, 13, 16, 0.92);
@@ -34,19 +40,27 @@
   --accent-primary-bg: rgba(59, 164, 255, 0.14);
   --accent-primary-glow: rgba(59, 164, 255, 0.18);
   --accent-secondary: #38d39f;
+  --accent-secondary-dim: #22b986;
   --accent-tertiary: #f5b64a;
 
   /* Semantic */
   --color-success: #38d39f;
+  --color-success-bg: rgba(56, 211, 159, 0.11);
   --color-warning: #f5b64a;
+  --color-warning-bg: rgba(245, 182, 74, 0.12);
   --color-error: #ff6b6b;
+  --color-error-bg: rgba(255, 107, 107, 0.12);
   --color-info: #3ba4ff;
+  --color-info-bg: rgba(59, 164, 255, 0.12);
 
   /* Text */
   --text-primary: #edf1f5;
   --text-secondary: #a4afb9;
   --text-muted: #687581;
   --text-inverse: #071017;
+  --text-on-media: #ffffff;
+  --media-frame-bg: #050607;
+  --media-caption-surface: rgba(3, 10, 17, 0.78);
 
   /* Borders */
   --border-subtle: rgba(255, 255, 255, 0.06);
@@ -54,18 +68,30 @@
   --border-strong: rgba(255, 255, 255, 0.16);
   --border-accent: rgba(59, 164, 255, 0.34);
 
-  /* Radii - Rounded from prototype */
+  /* Radii —— P0 统一圆角阶：与老前端一致，全部钉回 8px，消除 rounded-lg/xl/2xl 混用导致的“卡片不齐” */
   --radius-sm: 6px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
+  --radius-md: 8px;
+  --radius-lg: 8px;
+  --radius-xl: 8px;
   --radius-full: 9999px;
+
+  /* Spacing scale —— P0 引入间距阶，替代散落的 p-3/p-4/p-6 随意取值 */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
 
   /* Shadows */
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.34), 0 0 0 1px var(--border-subtle);
   --shadow-card-hover: 0 6px 18px rgba(0, 0, 0, 0.34), 0 0 0 1px var(--border-default);
   --shadow-elevated: 0 18px 60px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--border-default);
   --shadow-glow: 0 0 0 3px var(--accent-primary-glow);
+  --shadow-glow-success: 0 0 20px color-mix(in srgb, var(--color-success) 18%, transparent);
+  --shadow-glow-error: 0 0 20px color-mix(in srgb, var(--color-error) 18%, transparent);
 
   /* Transitions */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -74,10 +100,79 @@
   --duration-normal: 250ms;
   --duration-slow: 400ms;
 
-  /* Typography */
+  /* Typography —— P0 补回字号 / 字重 / 行高 / 字距阶，统一全文排版节奏 */
   --font-sans: "Inter", "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei",
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans GB", sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "Cascadia Code", "Consolas",
+    "Microsoft YaHei", monospace;
+  --fs-page-title: clamp(24px, 3vw, 32px);
+  --fs-section-title: 18px;
+  --fs-panel-title: 16px;
+  --fs-card-title: 14px;
+  --fs-body: 13px;
+  --fs-body-sm: 12px;
+  --fs-label: 11px;
+  --fs-micro: 11px;
+  --fs-eyebrow: 11px;
+  --fs-caption: 11px;
+  --tracking-eyebrow: 0.12em;
+  --lh-title: 1.18;
+  --lh-body: 1.58;
+  --lh-compact: 1.25;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --fw-heavy: 800;
+}
+
+/* ── Light theme override ────────────────────────────────────
+   P0 迁移老前端亮色变量。老前端用 `:root:not(.dark)`（无 .dark 即亮），
+   但新前端默认深色且尚无 themeStore，故改挂 `:root.light`——保持深色默认，
+   P1 接入 themeStore 后给 <html> 加/去 .light 即可切换，无需重写变量。 */
+:root.light {
+  --bg-root: #eef2f5;
+  --bg-canvas: #f7f9fb;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f3f6f8;
+  --bg-elevated: #ffffff;
+  --bg-overlay: rgba(12, 20, 28, 0.42);
+  --bg-input: #ffffff;
+  --bg-table-head: #f3f6f8;
+  --bg-media: #eef2f5;
+  --bg-row-hover: rgba(28, 42, 56, 0.045);
+  --bg-track: rgba(28, 42, 56, 0.09);
+  --chrome-sidebar: #ffffff;
+  --chrome-topbar: rgba(247, 249, 251, 0.94);
+
+  --surface-gradient-glow: radial-gradient(circle at 0% 0%, rgba(42,157,244,0.1), transparent 36%);
+  --surface-gradient-wash: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(244,248,252,0.9));
+  --surface-gradient-card: var(--surface-gradient-glow), var(--surface-gradient-wash), var(--bg-card);
+  --surface-gradient-panel: var(--surface-gradient-glow), var(--surface-gradient-wash), var(--bg-card);
+  --surface-gradient-elevated: var(--surface-gradient-glow), var(--surface-gradient-wash), var(--bg-elevated);
+  --surface-gradient-line: linear-gradient(90deg, rgba(42,157,244,0.28), rgba(42,157,244,0.08));
+
+  --text-primary: #17212b;
+  --text-secondary: #536170;
+  --text-muted: #7d8996;
+  --text-inverse: #ffffff;
+  --text-on-media: #ffffff;
+  --media-frame-bg: #07121d;
+  --media-caption-surface: rgba(7, 18, 29, 0.78);
+
+  --border-subtle: rgba(23, 33, 43, 0.08);
+  --border-default: rgba(23, 33, 43, 0.13);
+  --border-strong: rgba(23, 33, 43, 0.2);
+  --border-accent: rgba(59, 164, 255, 0.34);
+
+  --accent-primary-bg: rgba(63, 159, 226, 0.08);
+  --accent-primary-glow: rgba(100, 184, 242, 0.12);
+
+  --shadow-card: 0 1px 2px rgba(18, 31, 44, 0.06), 0 0 0 1px var(--border-subtle);
+  --shadow-card-hover: 0 8px 22px rgba(18, 31, 44, 0.1), 0 0 0 1px var(--border-default);
+  --shadow-elevated: 0 20px 70px rgba(18, 31, 44, 0.18), 0 0 0 1px var(--border-default);
+  --shadow-glow: 0 0 20px var(--accent-primary-glow);
 }
 
 /* ── Reset & Base ──────────────────────────────────────────── */
@@ -104,6 +199,7 @@ body {
   background: var(--bg-root);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   width: 100%;
   min-width: 100%;
   overflow-x: hidden;
@@ -168,6 +264,24 @@ body {
   50% { transform: translate3d(0, -5%, 0) scale(1.08); opacity: 0.85; }
 }
 
+/* 老前端通用动画（迁移） */
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .animate-fade-in {
   animation: fadeIn 0.5s var(--ease-out-expo) forwards;
 }
@@ -183,6 +297,12 @@ body {
 .animate-glow-pulse {
   animation: glow-expand 0.6s var(--ease-out-expo) forwards;
 }
+
+/* 迁移自老前端的通用动画工具类 */
+.animate-slide-up { animation: slide-up var(--duration-slow) var(--ease-out-expo) forwards; }
+.animate-scale-in { animation: scale-in var(--duration-normal) var(--ease-out-expo) forwards; }
+.animate-shimmer { animation: shimmer 2s linear infinite; }
+.animate-spin-slow { animation: spin-slow 6s linear infinite; }
 
 /* 交错延迟工具类 */
 .stagger-1 { animation-delay: 0.05s; }
@@ -253,6 +373,283 @@ body {
     transform: translateY(-1px) scale(0.995);
     transition-duration: var(--duration-fast);
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   组件层（P0 迁移自老前端）
+   整套语义化组件类——按钮 / 卡片 / 徽标 / 输入 / 统计 / 段落标题等，
+   供后续把组件内裸 Tailwind 收敛为统一语义类（P1）。纯 CSS，与 React 无关。
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── 玻璃容器变体 ───────────────────────────────────────────── */
+.glass {
+  background: var(--surface-gradient-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(12px);
+  transition: border-color var(--duration-fast) var(--ease-in-out),
+              box-shadow var(--duration-fast) var(--ease-in-out);
+}
+.glass:hover {
+  border-color: var(--border-default);
+  box-shadow: var(--shadow-card-hover);
+}
+.glass-accent {
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-card), var(--shadow-glow);
+}
+
+/* ── 卡片 ───────────────────────────────────────────────────── */
+.card {
+  background: var(--surface-gradient-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
+}
+.card:hover {
+  border-color: var(--border-default);
+  box-shadow: var(--shadow-card-hover);
+}
+.card-interactive {
+  cursor: pointer;
+}
+.card-interactive:active {
+  transform: scale(0.995);
+}
+
+/* ── Ring 卡片（描边强调） ──────────────────────────────────── */
+.card-ring {
+  background: var(--surface-gradient-card);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--border-subtle);
+  transition: box-shadow var(--duration-normal) var(--ease-out-expo),
+              transform var(--duration-normal) var(--ease-out-expo);
+}
+.card-ring:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--border-default);
+  transform: translateY(-1px);
+}
+.card-ring-accent {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--border-accent);
+}
+.card-ring-success {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 1px color-mix(in srgb, var(--color-success) 30%, transparent);
+}
+.card-ring-warning {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 1px color-mix(in srgb, var(--color-warning) 30%, transparent);
+}
+.card-ring-error {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 1px color-mix(in srgb, var(--color-error) 30%, transparent);
+}
+
+/* ── 圆形图标容器 ───────────────────────────────────────────── */
+.icon-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  color: var(--accent-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(63, 159, 226, 0.15);
+  flex-shrink: 0;
+}
+.icon-circle-sm { width: 32px; height: 32px; }
+.icon-circle-md { width: 40px; height: 40px; }
+
+/* ── 徽标 / 胶囊 ────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+/* ── 标签 ───────────────────────────────────────────────────── */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-semibold);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+}
+
+/* ── 按钮基类与变体 ─────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-in-out);
+  white-space: nowrap;
+  user-select: none;
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: var(--accent-primary);
+  color: #fff;
+  border-color: var(--accent-primary);
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-primary-dim);
+  box-shadow: var(--shadow-glow);
+}
+.btn-secondary {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: var(--bg-card-hover);
+  border-color: var(--border-strong);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+}
+.btn-ghost:hover:not(:disabled) {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+.btn-danger {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  border-color: color-mix(in srgb, var(--color-error) 25%, transparent);
+}
+.btn-danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-error) 18%, transparent);
+  box-shadow: var(--shadow-glow-error);
+}
+.btn-sm { padding: 4px 10px; font-size: var(--fs-body-sm); }
+.btn-lg { padding: 10px 24px; font-size: var(--fs-card-title); border-radius: var(--radius-lg); }
+
+/* ── 输入框 ─────────────────────────────────────────────────── */
+.input {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--fs-body);
+  font-family: var(--font-sans);
+  transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
+}
+.input::placeholder { color: var(--text-muted); }
+.input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-primary-glow);
+  outline: none;
+}
+
+/* ── 进度条 ─────────────────────────────────────────────────── */
+.progress-bar {
+  height: 4px;
+  background: var(--bg-surface);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  transition: width 0.6s var(--ease-out-expo);
+}
+.progress-bar-lg {
+  height: 8px;
+  background: var(--bg-surface);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.progress-bar-lg .progress-bar-fill,
+.progress-bar-fill-lg {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  transition: width 0.6s var(--ease-out-expo);
+}
+
+/* ── 分隔线 ─────────────────────────────────────────────────── */
+.divider {
+  height: 1px;
+  background: var(--border-subtle);
+  border: none;
+  margin: 16px 0;
+}
+
+/* ── 段落标题 / 统计计数 ───────────────────────────────────── */
+.section-heading {
+  font-size: var(--fs-section-title);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0;
+  color: var(--text-primary);
+}
+.stat-label {
+  font-size: var(--fs-label);
+  color: var(--text-muted);
+}
+.stat-value {
+  font-size: var(--fs-card-title);
+  font-weight: var(--fw-bold);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── App 外壳 / 主区背景 ───────────────────────────────────── */
+.app-shell {
+  background: var(--bg-root);
+}
+.app-main {
+  background:
+    linear-gradient(180deg, rgba(16, 21, 27, 0.76), rgba(9, 11, 14, 0) 220px),
+    var(--bg-root);
+}
+
+/* ── 骨架屏 shimmer ─────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg,
+    var(--bg-card) 25%,
+    var(--bg-card-hover) 50%,
+    var(--bg-card) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+  border-radius: var(--radius-sm);
+}
+
+/* ── 亮色主题下的组件级覆盖（迁移自老前端，键名改挂 .light）── */
+:root.light .glass-panel {
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: var(--shadow-card);
+}
+:root.light .card-ring {
+  box-shadow: var(--shadow-card);
+}
+:root.light .card-ring:hover {
+  box-shadow: var(--shadow-card-hover);
+}
+:root.light .app-main {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(238, 242, 245, 0) 220px),
+    var(--bg-root);
 }
 
 /* ── Scrollbar ──────────────────────────────────────────────── */
