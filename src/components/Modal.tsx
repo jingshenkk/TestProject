@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
+import { createPortal } from 'react-dom';
 
 interface ModalProps {
   isOpen: boolean;
@@ -72,9 +73,12 @@ export default function Modal({
 
   if (!isOpen) return null;
 
-  return (
+  // 通过 Portal 渲染到 document.body，脱离父级 glass-panel 的
+  // backdrop-filter / overflow-hidden 造成 fixed 定位被“困”在父容器内的副作用，
+  // 使弹层在视口内居中并完整呈现（不再被裁剪到输入框区域）。
+  return createPortal(
     <div
-      className={`fixed inset-0 ${zIndex} flex items-center justify-center bg-black/60 backdrop-blur-sm transition-all duration-300 animate-fade-in`}
+      className={`fixed inset-0 ${zIndex} flex items-center justify-center bg-black/60 backdrop-blur-lg transition-all duration-300 animate-fade-in`}
       style={{ animationDuration: '0.2s' }}
       onClick={(e) => {
         if (closeOnBackdropClick && e.target === e.currentTarget) onClose();
@@ -82,7 +86,7 @@ export default function Modal({
     >
       {/* 背景辉光 */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-[var(--accent-primary)]/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-[var(--accent-primary)]/10 rounded-full blur-3xl" />
       </div>
 
       <div
@@ -90,12 +94,13 @@ export default function Modal({
         role="dialog"
         aria-modal="true"
         aria-label={ariaLabel}
-        className={`${panelClassName} relative animate-spring`}
-        style={{ animationDuration: '0.3s' }}
+        className={`${panelClassName} relative animate-spring my-auto mx-auto`}
+        style={{ animationDuration: '0.3s', maxHeight: 'calc(100vh - 40px)', marginTop: 'auto', marginBottom: 'auto' }}
         onClick={(e) => e.stopPropagation()}
       >
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
