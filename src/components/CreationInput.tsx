@@ -264,10 +264,10 @@ export default function CreationInput({
       </div>
 
       {/* ========== 1. 内容类型选择弹窗 ========== */}
-      <Modal isOpen={activeModal === 'type'} onClose={closeModal} panelClassName="w-[95vw] max-w-6xl max-h-[92vh] bg-[var(--bg-surface)] rounded-2xl shadow-2xl overflow-hidden">
-        <div className="flex flex-col h-[92vh]">
-          {/* 标题栏 - 固定在顶部 */}
-          <div className="flex items-center justify-between px-6 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] flex-shrink-0">
+      <Modal isOpen={activeModal === 'type'} onClose={closeModal} panelClassName="w-[95vw] max-w-6xl max-h-[80vh] bg-[var(--bg-surface)] rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+        {/* 顶部区域 */}
+        <div className="px-6 py-4 border-b border-[var(--border-subtle)] flex-shrink-0">
+          <div className="flex items-center justify-between">
             <div>
               <h3 className="text-base font-semibold text-[var(--text-primary)]">选择内容类型</h3>
               <p className="text-xs text-[var(--text-muted)]">选择最适合你创作需求的内容品类</p>
@@ -279,39 +279,39 @@ export default function CreationInput({
               <X size={20} />
             </button>
           </div>
-          {/* 可滚动内容区 */}
-          <div className="flex-1 overflow-y-auto p-4">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2">
-              {CONTENT_TYPE_OPTIONS.map((type) => (
-                <button
-                  key={type.key}
-                  onClick={() => selectContentType(type)}
-                  className={`p-3 rounded-lg border text-left transition-all duration-200 cursor-pointer ${
-                    options.typeKey === type.key
-                      ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)]/10'
-                      : 'border-[var(--border-default)] hover:border-[var(--accent-primary)]/50 hover:bg-[var(--bg-hover)]'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium text-sm text-[var(--text-primary)] truncate">{type.label}</span>
-                    {options.typeKey === type.key && <Check size={14} className="text-[var(--accent-primary)] flex-shrink-0 ml-1" />}
-                  </div>
-                  <div className="text-[10px] text-[var(--text-muted)] leading-tight">
-                    <p>{type.defaultAspectRatio} · {type.defaultEpisodeCount}集</p>
-                    <p className="text-[var(--accent-primary)]/60 truncate">{type.defaultVisualStyle}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
+        </div>
+        {/* 内容区 - 可滚动 */}
+        <div className="p-4 overflow-y-auto flex-1">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2">
+            {CONTENT_TYPE_OPTIONS.map((type) => (
+              <button
+                key={type.key}
+                onClick={() => selectContentType(type)}
+                className={`p-3 rounded-lg border text-left transition-all duration-200 cursor-pointer bg-[var(--bg-surface)] ${
+                  options.typeKey === type.key
+                    ? 'border-[var(--accent-primary)] ring-1 ring-[var(--accent-primary)]/30'
+                    : 'border-[var(--border-default)] hover:border-[var(--accent-primary)]/50'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-medium text-sm text-[var(--text-primary)] truncate">{type.label}</span>
+                  {options.typeKey === type.key && <Check size={14} className="text-[var(--accent-primary)] flex-shrink-0 ml-1" />}
+                </div>
+                <div className="text-[10px] text-[var(--text-muted)] leading-tight">
+                  <p>{type.defaultAspectRatio} · {type.defaultEpisodeCount}集</p>
+                  <p className="text-[var(--accent-primary)]/60 truncate">{type.defaultVisualStyle}</p>
+                </div>
+              </button>
+            ))}
           </div>
         </div>
       </Modal>
 
       {/* ========== 2. 视觉风格选择弹窗 ========== */}
-      <Modal isOpen={activeModal === 'style'} onClose={closeModal} panelClassName="w-[95vw] max-w-5xl max-h-[90vh] bg-[var(--bg-surface)] rounded-2xl shadow-2xl overflow-hidden">
-        <div className="flex flex-col h-[90vh]">
-          {/* 标题栏 */}
-          <div className="flex items-center justify-between px-6 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] flex-shrink-0">
+      <Modal isOpen={activeModal === 'style'} onClose={closeModal} panelClassName="w-[95vw] max-w-5xl max-h-[75vh] bg-[var(--bg-surface)] rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+        {/* 顶部区域 */}
+        <div className="px-6 py-4 border-b border-[var(--border-subtle)] flex-shrink-0">
+          <div className="flex items-center justify-between">
             <div>
               <h3 className="text-base font-semibold text-[var(--text-primary)]">选择视觉风格</h3>
               <p className="text-xs text-[var(--text-muted)]">确定作品的视觉美学方向</p>
@@ -323,36 +323,36 @@ export default function CreationInput({
               <X size={20} />
             </button>
           </div>
-          {/* 可滚动内容区 */}
-          <div className="flex-1 overflow-y-auto p-4">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
-              {VISUAL_STYLE_OPTIONS.map((style) => (
-                <button
-                  key={style.key}
-                  onClick={() => selectVisualStyle(style)}
-                  className={`p-3 rounded-lg border text-left transition-all duration-200 cursor-pointer ${
-                    options.styleKey === style.key
-                      ? 'border-[var(--accent-secondary)] bg-[var(--accent-secondary)]/10'
-                      : 'border-[var(--border-default)] hover:border-[var(--accent-secondary)]/50 hover:bg-[var(--bg-hover)]'
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-1">
-                    <span className="font-medium text-sm text-[var(--text-primary)] truncate">{style.label}</span>
-                    {options.styleKey === style.key && <Check size={14} className="text-[var(--accent-secondary)] flex-shrink-0 ml-1" />}
-                  </div>
-                  <p className="text-[10px] text-[var(--text-muted)] leading-tight line-clamp-2">{style.description}</p>
-                </button>
-              ))}
-            </div>
+        </div>
+        {/* 内容区 - 可滚动 */}
+        <div className="p-4 overflow-y-auto flex-1">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
+            {VISUAL_STYLE_OPTIONS.map((style) => (
+              <button
+                key={style.key}
+                onClick={() => selectVisualStyle(style)}
+                className={`p-3 rounded-lg border text-left transition-all duration-200 cursor-pointer bg-[var(--bg-surface)] ${
+                  options.styleKey === style.key
+                    ? 'border-[var(--accent-secondary)] ring-1 ring-[var(--accent-secondary)]/30'
+                    : 'border-[var(--border-default)] hover:border-[var(--accent-secondary)]/50'
+                }`}
+              >
+                <div className="flex items-start justify-between mb-1">
+                  <span className="font-medium text-sm text-[var(--text-primary)] truncate">{style.label}</span>
+                  {options.styleKey === style.key && <Check size={14} className="text-[var(--accent-secondary)] flex-shrink-0 ml-1" />}
+                </div>
+                <p className="text-[10px] text-[var(--text-muted)] leading-tight line-clamp-2">{style.description}</p>
+              </button>
+            ))}
           </div>
         </div>
       </Modal>
 
       {/* ========== 3. 规格配置弹窗 ========== */}
-      <Modal isOpen={activeModal === 'format'} onClose={closeModal} panelClassName="w-[95vw] max-w-4xl max-h-[90vh] bg-[var(--bg-surface)] rounded-2xl shadow-2xl overflow-hidden">
-        <div className="flex flex-col h-[90vh]">
-          {/* 标题栏 */}
-          <div className="flex items-center justify-between px-6 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] flex-shrink-0">
+      <Modal isOpen={activeModal === 'format'} onClose={closeModal} panelClassName="w-[95vw] max-w-4xl max-h-[75vh] bg-[var(--bg-surface)] rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+        {/* 顶部区域 */}
+        <div className="px-6 py-4 border-b border-[var(--border-subtle)] flex-shrink-0">
+          <div className="flex items-center justify-between">
             <div>
               <h3 className="text-base font-semibold text-[var(--text-primary)]">配置规格参数</h3>
               <p className="text-xs text-[var(--text-muted)]">选择预设或自定义剧集规格</p>
@@ -364,98 +364,98 @@ export default function CreationInput({
               <X size={20} />
             </button>
           </div>
-          {/* 内容区 - 紧凑布局 */}
-          <div className="flex-1 overflow-y-auto p-4">
-            {/* 两部分并排显示 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* 左侧：快速预设 */}
-              <div>
-                <h4 className="text-xs font-medium text-[var(--text-secondary)] mb-2">快速预设</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {FORMAT_PRESETS.map((preset) => (
-                    <button
-                      key={preset.label}
-                      onClick={() => selectFormatPreset(preset)}
-                      className={`p-2.5 rounded-lg border text-left transition-all duration-200 cursor-pointer ${
-                        options.format === preset.label
-                          ? 'border-[var(--accent-tertiary)] bg-[var(--accent-tertiary)]/10'
-                          : 'border-[var(--border-default)] hover:border-[var(--accent-tertiary)]/50 hover:bg-[var(--bg-hover)]'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-xs text-[var(--text-primary)] truncate">{preset.label}</span>
-                        {options.format === preset.label && <Check size={12} className="text-[var(--accent-tertiary)] flex-shrink-0 ml-1" />}
-                      </div>
-                      <p className="text-[10px] text-[var(--text-muted)] mt-0.5 truncate">{preset.description}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 右侧：自定义配置 */}
-              <div>
-                <h4 className="text-xs font-medium text-[var(--text-secondary)] mb-2">自定义配置</h4>
-                <div className="space-y-3">
-                  {/* 画幅比例 */}
-                  <div>
-                    <label className="text-xs font-medium text-[var(--text-primary)] mb-1.5 block">画面比例</label>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {ASPECT_RATIO_OPTIONS.map((ratio) => (
-                        <button
-                          key={ratio.value}
-                          onClick={() => setTempFormat(prev => ({ ...prev, aspectRatio: ratio.value }))}
-                          className={`py-1.5 px-2 rounded-lg border text-center transition-all duration-200 cursor-pointer ${
-                            tempFormat.aspectRatio === ratio.value
-                              ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)]/10'
-                              : 'border-[var(--border-default)] hover:border-[var(--border-subtle)] hover:bg-[var(--bg-hover)]'
-                          }`}
-                        >
-                          <span className="text-xs font-medium block text-[var(--text-primary)]">{ratio.value}</span>
-                          <span className="text-[10px] text-[var(--text-muted)] truncate block">{ratio.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                    <p className="text-[10px] text-[var(--text-muted)] mt-1 truncate">
-                      {ASPECT_RATIO_OPTIONS.find(r => r.value === tempFormat.aspectRatio)?.usage}
-                    </p>
-                  </div>
-
-                  {/* 集数和时长 并排 */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-xs font-medium text-[var(--text-primary)] mb-1 block">集数</label>
-                      <input
-                        type="number"
-                        min={1}
-                        max={100}
-                        value={tempFormat.episodeCount}
-                        onChange={(e) => setTempFormat(prev => ({ ...prev, episodeCount: Math.max(1, parseInt(e.target.value) || 1) }))}
-                        className="w-full px-2 py-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--bg-input)] text-[var(--text-primary)] text-sm focus:border-[var(--accent-primary)] focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-[var(--text-primary)] mb-1 block">单集时长(秒)</label>
-                      <input
-                        type="number"
-                        min={15}
-                        max={3600}
-                        step={10}
-                        value={tempFormat.duration}
-                        onChange={(e) => setTempFormat(prev => ({ ...prev, duration: Math.max(15, parseInt(e.target.value) || 15) }))}
-                        className="w-full px-2 py-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--bg-input)] text-[var(--text-primary)] text-sm focus:border-[var(--accent-primary)] focus:outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  {/* 应用按钮 */}
+        </div>
+        {/* 内容区 - 可滚动 */}
+        <div className="p-4 overflow-y-auto flex-1">
+          {/* 两部分并排显示 */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* 左侧：快速预设 */}
+            <div className="bg-[var(--bg-input)] rounded-lg p-4">
+              <h4 className="text-xs font-medium text-[var(--text-secondary)] mb-3">快速预设</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {FORMAT_PRESETS.map((preset) => (
                   <button
-                    onClick={applyCustomFormat}
-                    className="w-full py-2 rounded-lg bg-[var(--accent-primary)] text-white text-sm font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5"
+                    key={preset.label}
+                    onClick={() => selectFormatPreset(preset)}
+                    className={`p-3 rounded-lg border text-left transition-all duration-200 cursor-pointer bg-[var(--bg-surface)] ${
+                      options.format === preset.label
+                        ? 'border-[var(--accent-tertiary)]'
+                        : 'border-[var(--border-default)] hover:border-[var(--accent-tertiary)]/50'
+                    }`}
                   >
-                    <Check size={14} />
-                    应用自定义配置
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-xs text-[var(--text-primary)] truncate">{preset.label}</span>
+                      {options.format === preset.label && <Check size={12} className="text-[var(--accent-tertiary)] flex-shrink-0 ml-1" />}
+                    </div>
+                    <p className="text-[10px] text-[var(--text-muted)] mt-0.5 truncate">{preset.description}</p>
                   </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 右侧：自定义配置 */}
+            <div className="bg-[var(--bg-input)] rounded-lg p-4">
+              <h4 className="text-xs font-medium text-[var(--text-secondary)] mb-3">自定义配置</h4>
+              <div className="space-y-4">
+                {/* 画幅比例 */}
+                <div>
+                  <label className="text-xs font-medium text-[var(--text-primary)] mb-2 block">画面比例</label>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {ASPECT_RATIO_OPTIONS.map((ratio) => (
+                      <button
+                        key={ratio.value}
+                        onClick={() => setTempFormat(prev => ({ ...prev, aspectRatio: ratio.value }))}
+                        className={`py-2 px-2 rounded-lg border text-center transition-all duration-200 cursor-pointer bg-[var(--bg-surface)] ${
+                          tempFormat.aspectRatio === ratio.value
+                            ? 'border-[var(--accent-primary)]'
+                            : 'border-[var(--border-default)] hover:border-[var(--border-subtle)]'
+                        }`}
+                      >
+                        <span className="text-xs font-medium block text-[var(--text-primary)]">{ratio.value}</span>
+                        <span className="text-[10px] text-[var(--text-muted)] truncate block">{ratio.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-[var(--text-muted)] mt-1.5 truncate">
+                    {ASPECT_RATIO_OPTIONS.find(r => r.value === tempFormat.aspectRatio)?.usage}
+                  </p>
                 </div>
+
+                {/* 集数和时长 并排 */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-[var(--text-primary)] mb-2 block">集数</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={100}
+                      value={tempFormat.episodeCount}
+                      onChange={(e) => setTempFormat(prev => ({ ...prev, episodeCount: Math.max(1, parseInt(e.target.value) || 1) }))}
+                      className="w-full px-3 py-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-primary)] text-sm focus:border-[var(--accent-primary)] focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-[var(--text-primary)] mb-2 block">单集时长(秒)</label>
+                    <input
+                      type="number"
+                      min={15}
+                      max={3600}
+                      step={10}
+                      value={tempFormat.duration}
+                      onChange={(e) => setTempFormat(prev => ({ ...prev, duration: Math.max(15, parseInt(e.target.value) || 15) }))}
+                      className="w-full px-3 py-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-primary)] text-sm focus:border-[var(--accent-primary)] focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* 应用按钮 */}
+                <button
+                  onClick={applyCustomFormat}
+                  className="w-full py-2.5 rounded-lg bg-[var(--accent-primary)] text-white text-sm font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                >
+                  <Check size={14} />
+                  应用自定义配置
+                </button>
               </div>
             </div>
           </div>
@@ -463,10 +463,10 @@ export default function CreationInput({
       </Modal>
 
       {/* ========== 4. AI模型选择弹窗 ========== */}
-      <Modal isOpen={activeModal === 'model'} onClose={closeModal} panelClassName="w-[95vw] max-w-3xl max-h-[80vh] bg-[var(--bg-surface)] rounded-2xl shadow-2xl overflow-hidden">
-        <div className="flex flex-col h-[80vh]">
-          {/* 标题栏 */}
-          <div className="flex items-center justify-between px-6 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] flex-shrink-0">
+      <Modal isOpen={activeModal === 'model'} onClose={closeModal} panelClassName="w-[95vw] max-w-3xl max-h-[60vh] bg-[var(--bg-surface)] rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+        {/* 顶部区域 */}
+        <div className="px-6 py-4 border-b border-[var(--border-subtle)] flex-shrink-0">
+          <div className="flex items-center justify-between">
             <div>
               <h3 className="text-base font-semibold text-[var(--text-primary)]">选择AI模型</h3>
               <p className="text-xs text-[var(--text-muted)]">选择最适合创作的AI模型</p>
@@ -478,43 +478,43 @@ export default function CreationInput({
               <X size={20} />
             </button>
           </div>
-          {/* 内容区 - 2x2网格布局 */}
-          <div className="flex-1 overflow-y-auto p-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {AI_MODEL_OPTIONS.map((model) => (
-                <button
-                  key={model.key}
-                  onClick={() => selectAIModel(model)}
-                  className={`p-3 rounded-lg border text-left transition-all duration-200 cursor-pointer ${
-                    options.modelKey === model.key
-                      ? 'border-[var(--color-info)] bg-[var(--color-info)]/10'
-                      : 'border-[var(--border-default)] hover:border-[var(--color-info)]/50 hover:bg-[var(--bg-hover)]'
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <span className="font-semibold text-sm text-[var(--text-primary)]">{model.label}</span>
-                        {model.recommended && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--color-success)]/20 text-[var(--color-success)]">
-                            推荐
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-[10px] text-[var(--text-muted)] mb-1.5">{model.provider} · {model.description}</p>
-                      <div className="flex flex-wrap gap-1">
-                        {model.features.slice(0, 3).map((feature) => (
-                          <span key={feature} className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--bg-hover)] text-[var(--text-secondary)]">
-                            {feature}
-                          </span>
-                        ))}
-                      </div>
+        </div>
+        {/* 内容区 - 可滚动 */}
+        <div className="p-4 overflow-y-auto flex-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {AI_MODEL_OPTIONS.map((model) => (
+              <button
+                key={model.key}
+                onClick={() => selectAIModel(model)}
+                className={`p-3 rounded-lg border text-left transition-all duration-200 cursor-pointer bg-[var(--bg-surface)] ${
+                  options.modelKey === model.key
+                    ? 'border-[var(--color-info)]'
+                    : 'border-[var(--border-default)] hover:border-[var(--color-info)]/50'
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="font-semibold text-sm text-[var(--text-primary)]">{model.label}</span>
+                      {model.recommended && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--color-success)]/20 text-[var(--color-success)]">
+                          推荐
+                        </span>
+                      )}
                     </div>
-                    {options.modelKey === model.key && <Check size={16} className="text-[var(--color-info)] flex-shrink-0 ml-1.5" />}
+                    <p className="text-[10px] text-[var(--text-muted)] mb-1.5">{model.provider} · {model.description}</p>
+                    <div className="flex flex-wrap gap-1">
+                      {model.features.slice(0, 3).map((feature) => (
+                        <span key={feature} className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--bg-hover)] text-[var(--text-secondary)]">
+                          {feature}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </button>
-              ))}
-            </div>
+                  {options.modelKey === model.key && <Check size={16} className="text-[var(--color-info)] flex-shrink-0 ml-1.5" />}
+                </div>
+              </button>
+            ))}
           </div>
         </div>
       </Modal>
