@@ -10,6 +10,7 @@ export interface Project {
   aspectRatio: string;
   targetPlatform?: string | null;
   visualStyle?: string | null;
+  brief?: Record<string, unknown>;
   episodeCount: number;
   episodeDurationSec: number;
   isMock?: boolean;

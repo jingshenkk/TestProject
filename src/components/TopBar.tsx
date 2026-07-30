@@ -1,8 +1,9 @@
 import { User, Menu, Sparkles, Crown } from 'lucide-react';
+import AccountAvatarMenu from '@/components/AccountAvatarMenu';
 
 export default function TopBar() {
   return (
-    <header className="h-14 lg:h-16 flex items-center justify-between px-4 lg:px-6 border-b border-[var(--border-subtle)] bg-[var(--chrome-topbar)] backdrop-blur-xl sticky top-0 z-50 relative overflow-hidden">
+    <header className="h-14 lg:h-16 flex items-center justify-between px-4 lg:px-6 border-b border-[var(--border-subtle)] bg-[var(--chrome-topbar)] backdrop-blur-xl sticky top-0 z-50 relative overflow-visible">
       {/* 顶部辉光 */}
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--accent-primary)]/50 to-transparent" />
 
@@ -43,13 +44,13 @@ export default function TopBar() {
         <div className="w-px h-6 bg-[var(--border-subtle)] hidden sm:block" />
 
         {/* Avatar */}
-        <button className="w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white flex items-center justify-center relative group overflow-hidden shadow-lg shadow-[var(--accent-primary)]/20 transition-all duration-300 hover:shadow-xl hover:shadow-[var(--accent-primary)]/30 hover:scale-105 active:scale-95">
+        <AccountAvatarMenu buttonClassName="w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white flex items-center justify-center relative group overflow-hidden shadow-lg shadow-[var(--accent-primary)]/20 transition-all duration-300 hover:shadow-xl hover:shadow-[var(--accent-primary)]/30 hover:scale-105 active:scale-95">
           {/* 旋转光环 */}
           <span className="absolute inset-0 rounded-full border-2 border-dashed border-white/30 animate-spin" style={{ animationDuration: '8s' }} />
           <User size={18} className="relative z-10" />
           {/* 在线状态指示 */}
           <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[var(--color-success)] rounded-full border-2 border-[var(--chrome-topbar)]" />
-        </button>
+        </AccountAvatarMenu>
       </div>
     </header>
   );

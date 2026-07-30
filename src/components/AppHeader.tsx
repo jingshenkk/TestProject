@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import AccountAvatarMenu from '@/components/AccountAvatarMenu';
 
 interface AppHeaderProps {
   title: string;
@@ -28,7 +29,7 @@ export default function AppHeader({
   const hasLeftGroup = showBack || subtitle || extraLeft;
 
   return (
-    <header className={`h-14 lg:h-16 px-4 lg:px-6 border-b border-[var(--border-subtle)] bg-[var(--chrome-topbar)] backdrop-blur-xl sticky top-0 ${zIndex} relative overflow-hidden`}>
+    <header className={`h-14 lg:h-16 px-4 lg:px-6 border-b border-[var(--border-subtle)] bg-[var(--chrome-topbar)] backdrop-blur-xl sticky top-0 ${zIndex} relative overflow-visible`}>
       {/* 顶部渐变线 */}
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--accent-primary)]/30 to-transparent" />
 
@@ -79,11 +80,11 @@ export default function AppHeader({
           </div>
 
           {/* Avatar */}
-          <button className="w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white flex items-center justify-center hover:ring-2 hover:ring-[var(--accent-primary)] hover:ring-offset-2 hover:ring-offset-[var(--bg-root)] transition-all duration-300 hover:scale-105 active:scale-95 relative overflow-hidden">
+          <AccountAvatarMenu buttonClassName="w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white flex items-center justify-center hover:ring-2 hover:ring-[var(--accent-primary)] hover:ring-offset-2 hover:ring-offset-[var(--bg-root)] transition-all duration-300 hover:scale-105 active:scale-95 relative overflow-hidden">
             <span className="text-xs lg:text-sm font-medium relative z-10">头像</span>
             {/* 旋转光环 */}
             <span className="absolute inset-0 rounded-full border-2 border-dashed border-white/20 animate-spin" style={{ animationDuration: '10s' }} />
-          </button>
+          </AccountAvatarMenu>
         </div>
       </div>
     </header>

@@ -10,6 +10,7 @@ interface ProjectRead {
   aspect_ratio: string;
   target_platform?: string | null;
   visual_style?: string | null;
+  brief_json?: string | null;
   episode_count: number;
   episode_duration_sec: number;
   updated_at: string;
@@ -20,6 +21,54 @@ interface ProjectListResponse {
   total: number;
 }
 
+export interface ProjectRecipe {
+  key: string;
+  label: string;
+  description: string;
+  workflow_template: string;
+  default_aspect_ratio: string;
+  default_platforms: string[];
+  default_visual_style: string;
+  default_episode_count: number;
+  default_episode_duration_sec: number;
+  brief_fields: string[];
+  brief_hints?: Record<string, string>;
+}
+
+export interface ProjectCreationDraft {
+  name: string;
+  content_type: string;
+  workflow_template: string;
+  brief: Record<string, string>;
+  target_platform: string[];
+  aspect_ratio: string;
+  visual_style: string;
+  color_palette: string[];
+  episode_count: number;
+  episode_duration_sec: number;
+  model_policy: Record<string, string>;
+  script_provider: 'claude' | 'openai' | 'deepseek';
+  source_brief: string;
+}
+
+export interface ProjectCreationDraftRequest {
+  creative_brief: string;
+  content_type: string;
+  provider: 'claude' | 'openai' | 'deepseek';
+}
+
+export interface CreateProjectFromCreativeBriefRequest {
+  creative_brief: string;
+  content_type: string;
+  provider: 'claude' | 'openai' | 'deepseek';
+  name_hint?: string;
+}
+
+export interface ProjectCreationStartResponse {
+  project: Project;
+  creationStatus: 'generating' | 'ready' | 'failed';
+}
+
 export interface CreateProjectRequest {
   name: string;
   content_type?: string;
@@ -28,6 +77,11 @@ export interface CreateProjectRequest {
   episode_count?: number;
   episode_duration_sec?: number;
   brief?: Record<string, unknown>;
+  workflow_template?: string;
+  target_platform?: string;
+  color_palette?: string[];
+  model_policy?: Record<string, string>;
+  enforce_brief?: boolean;
 }
 
 export interface UpdateProjectRequest {
@@ -35,6 +89,16 @@ export interface UpdateProjectRequest {
   status?: string;
   aspect_ratio?: string;
   visual_style?: string;
+}
+
+function parseBrief(value?: string | null): Record<string, unknown> | undefined {
+  if (!value) return undefined;
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed as Record<string, unknown> : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function formatDate(value: string): string {
@@ -57,8 +121,32 @@ function toProject(raw: ProjectRead): Project {
     aspectRatio: raw.aspect_ratio,
     targetPlatform: raw.target_platform,
     visualStyle: raw.visual_style,
+    brief: parseBrief(raw.brief_json),
     episodeCount: raw.episode_count,
     episodeDurationSec: raw.episode_duration_sec,
+  };
+}
+
+export async function fetchProjectRecipes(): Promise<ProjectRecipe[]> {
+  const response = await apiRequest<{ recipes: ProjectRecipe[] }>('/api/projects/recipes');
+  return response.recipes;
+}
+
+export async function generateProjectCreationDraft(payload: ProjectCreationDraftRequest): Promise<ProjectCreationDraft> {
+  return apiRequest<ProjectCreationDraft>('/api/projects/creation-draft/generate', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function createProjectFromCreativeBrief(payload: CreateProjectFromCreativeBriefRequest): Promise<ProjectCreationStartResponse> {
+  const response = await apiRequest<{ project: ProjectRead; creation_status: ProjectCreationStartResponse['creationStatus'] }>('/api/projects/from-creative-brief', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  return {
+    project: toProject(response.project),
+    creationStatus: response.creation_status,
   };
 }
 

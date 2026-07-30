@@ -1,0 +1,59 @@
+diff --git a/src/pages/PostProductionPage.tsx b/src/pages/PostProductionPage.tsx
+index b9e122e..22f3b90 100644
+--- a/src/pages/PostProductionPage.tsx
++++ b/src/pages/PostProductionPage.tsx
+@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
+ import apiClient from '../api/postApiClient'
+ import { useToast } from '../components/common/Toast'
+ import StatusBadge from '../components/common/StatusBadge'
++import { getSelectedProject } from '../stores/selectedProject'
+ import {
+   IconAlert,
+   IconArrowLeft,
+@@ -234,7 +235,13 @@ export default function PostProductionPage() {
+     }
+   }
+ 
+-  useEffect(() => { if (id) loadWorkbench() }, [id])
++  useEffect(() => {
++    if (projectId > 0) {
++      void loadWorkbench()
++      return
++    }
++    setLoading(false)
++  }, [projectId])
+ 
+   // ── Audio status polling ──
+   const loadAudioStatus = async () => {
+@@ -249,7 +256,12 @@ export default function PostProductionPage() {
+       setMusicSegments(res.data.segments || [])
+     } catch { /* non-critical */ }
+   }
+-  useEffect(() => { if (id) { loadAudioStatus(); loadMusicSegments() } }, [id])
++  useEffect(() => {
++    if (projectId > 0) {
++      void loadAudioStatus()
++      void loadMusicSegments()
++    }
++  }, [projectId])
+ 
+   // ── Audio Generation Handlers ──
+   const handleGenDialogue = async () => {
+@@ -416,7 +428,7 @@ export default function PostProductionPage() {
+         </div>
+       </div>
+       <div className="video-env-row">
+-        <Link to={`/project/${id}`} className="video-back-link" title="返回项目">
++        <Link to="/projects" className="video-back-link" title="返回项目">
+           <IconArrowLeft size={16} />
+           返回项目
+         </Link>
+@@ -426,7 +438,7 @@ export default function PostProductionPage() {
+         <span className={`video-pill ${readyForRender === null ? 'is-running' : readyForRender ? 'is-live' : 'is-warn'}`}>
+           {readyForRender === null ? '读取中' : readyForRender ? '可合成' : '待补齐'}
+         </span>
+-        <Link to={`/project/${id}/assets`} className="video-action secondary">
++        <Link to="/assets" className="video-action secondary">
+           资产库管理中心
+           <IconArrowRight size={14} />
+         </Link>

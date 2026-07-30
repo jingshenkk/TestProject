@@ -1,5 +1,7 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useParams } from 'react-router-dom';
 import { FileText, LayoutGrid, Image, Video, Wand2 } from 'lucide-react';
+import { workflowPath, type WorkflowStage } from '@/lib/projectWorkflow';
+import { getSelectedProject } from '@/stores/selectedProject';
 
 interface Step {
   key: string;
@@ -16,14 +18,24 @@ const steps: Step[] = [
   { key: 'post', label: '后期制作', path: '/post', icon: <Wand2 size={14} /> },
 ];
 
+const stages: Record<string, WorkflowStage> = {
+  script: 'script',
+  storyboard: 'storyboard',
+  image: 'image',
+  video: 'video',
+  post: 'post',
+};
+
 export default function ProcessStepBar() {
+  const { projectId: projectIdParam } = useParams<{ projectId?: string }>();
+  const projectId = Number(projectIdParam) || getSelectedProject()?.id || 0;
   return (
     <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
       {steps.map((step, index) => (
         <div key={step.key} className="flex items-center gap-2 flex-shrink-0 animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
           {/* Step Button */}
           <NavLink
-            to={step.path}
+            to={workflowPath(projectId, stages[step.key])}
             className={({ isActive }) => `
               h-11 px-4 lg:px-5 rounded-xl text-sm font-medium whitespace-nowrap
               transition-all duration-300 no-underline flex items-center gap-2 relative overflow-hidden

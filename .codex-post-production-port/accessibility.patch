@@ -1,0 +1,13 @@
+diff --git a/src/pages/PostProductionPage.tsx b/src/pages/PostProductionPage.tsx
+index 4264ad0..d1b7ffa 100644
+--- a/src/pages/PostProductionPage.tsx
++++ b/src/pages/PostProductionPage.tsx
+@@ -422,7 +422,7 @@ export default function PostProductionPage() {
+ 
+   const renderPostTopbar = (readyForRender: boolean | null = null) => (
+     <>
+-      <nav className="legacy-post-process-nav" aria-label="??????">
++      <nav className="legacy-post-process-nav" aria-label="Video creation workflow">
+         <ProcessStepBar />
+       </nav>
+       <header className="video-topbar project-topbar">

@@ -1,0 +1,56 @@
+diff --git a/src/pages/PostProductionPage.tsx b/src/pages/PostProductionPage.tsx
+index 75d0df5..4264ad0 100644
+--- a/src/pages/PostProductionPage.tsx
++++ b/src/pages/PostProductionPage.tsx
+@@ -4,6 +4,7 @@ import apiClient from '../api/postApiClient'
+ import { useToast } from '../components/common/Toast'
+ import StatusBadge from '../components/common/StatusBadge'
+ import { getSelectedProject } from '../stores/selectedProject'
++import ProcessStepBar from '../components/ProcessStepBar'
+ import {
+   IconAlert,
+   IconArrowLeft,
+@@ -420,7 +421,11 @@ export default function PostProductionPage() {
+   }
+ 
+   const renderPostTopbar = (readyForRender: boolean | null = null) => (
+-    <header className="video-topbar project-topbar">
++    <>
++      <nav className="legacy-post-process-nav" aria-label="??????">
++        <ProcessStepBar />
++      </nav>
++      <header className="video-topbar project-topbar">
+       <div className="video-title-group">
+         <div>
+           <span>POST WORKBENCH</span>
+@@ -444,7 +449,8 @@ export default function PostProductionPage() {
+           <IconArrowRight size={14} />
+         </Link>
+       </div>
+-    </header>
++      </header>
++    </>
+   )
+ 
+   if (loading) {
+
+diff --git a/src/index.css b/src/index.css
+index 594d49e..0fc5e23 100644
+--- a/src/index.css
++++ b/src/index.css
+@@ -1811,3 +1811,15 @@ body {
+     grid-template-columns: 1fr;
+   }
+ }
++
++
++/* Keep the video-creation step navigation above the transplanted legacy workbench. */
++.legacy-post-page .legacy-post-process-nav {
++  position: relative;
++  z-index: 31;
++  margin-bottom: 8px;
++}
++
++.legacy-post-page .legacy-post-process-nav > div {
++  margin-bottom: 0;
++}

@@ -59,6 +59,8 @@ export default function CharacterAssetDetail({ asset, switchList, selectedSwitch
   const details = asset.details || defaultDetails;
   const [selectedImageId, setSelectedImageId] = useState(details.images[0]?.id || '1');
   const [selectedVersionId, setSelectedVersionId] = useState('v2');
+  const [showAllRelatedShots, setShowAllRelatedShots] = useState(false);
+  const [showAllFields, setShowAllFields] = useState(false);
 
   const preview = (
     <>
@@ -107,10 +109,10 @@ export default function CharacterAssetDetail({ asset, switchList, selectedSwitch
             <h4 className="text-sm font-semibold text-[var(--text-primary)]">关联分镜</h4>
             <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--bg-input)] text-[var(--text-muted)]">{details.relatedShots.length}</span>
           </div>
-          <button className="text-xs text-[var(--accent-primary)] hover:underline">展开全部</button>
+          {details.relatedShots.length > 8 && <button type="button" onClick={() => setShowAllRelatedShots((value) => !value)} aria-expanded={showAllRelatedShots} className="rounded-md px-2 py-1 text-xs font-medium text-[var(--accent-primary)] hover:bg-[var(--accent-primary-bg)]">{showAllRelatedShots ? '收起分镜' : '展开全部'}</button>}
         </div>
         <div className="flex flex-wrap gap-2">
-          {details.relatedShots.slice(0, 8).map((shot) => (
+          {details.relatedShots.slice(0, showAllRelatedShots ? undefined : 8).map((shot) => (
             <span key={shot} className="px-2 py-1 rounded bg-[var(--bg-input)] text-xs text-[var(--text-secondary)] border border-[var(--border-subtle)]">
               {shot}
             </span>
@@ -125,7 +127,7 @@ export default function CharacterAssetDetail({ asset, switchList, selectedSwitch
             <h4 className="text-sm font-semibold text-[var(--text-primary)]">图像结构化字段</h4>
             <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--bg-input)] text-[var(--text-muted)]">15</span>
           </div>
-          <button className="text-xs text-[var(--accent-primary)] hover:underline">展开全部</button>
+          <button type="button" onClick={() => setShowAllFields((value) => !value)} aria-expanded={showAllFields} className="rounded-md px-2 py-1 text-xs font-medium text-[var(--accent-primary)] hover:bg-[var(--accent-primary-bg)]">{showAllFields ? '收起字段' : '展开字段'}</button>
         </div>
         <div className="space-y-2">
           {[
@@ -136,7 +138,7 @@ export default function CharacterAssetDetail({ asset, switchList, selectedSwitch
             { label: '年龄', value: details.fields.age },
             { label: '身高', value: details.fields.height },
             { label: '体型', value: details.fields.bodyType },
-          ].map((field) => (
+          ].slice(0, showAllFields ? undefined : 6).map((field) => (
             <div key={field.label} className="flex items-center justify-between py-1.5 border-b border-[var(--border-subtle)] last:border-0">
               <span className="text-xs text-[var(--text-muted)]">{field.label}</span>
               <span className="text-xs text-[var(--text-primary)] font-medium">{field.value}</span>
@@ -156,11 +158,6 @@ export default function CharacterAssetDetail({ asset, switchList, selectedSwitch
           </div>
         </div>
       </div>
-
-      {/* Generate Button */}
-      <button className="w-full py-3 rounded-xl text-sm font-medium bg-[var(--accent-primary)] text-white hover:opacity-90 transition-opacity">
-        修改生图 5币
-      </button>
     </>
   );
 

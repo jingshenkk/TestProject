@@ -1,5 +1,7 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useParams } from 'react-router-dom';
 import { Home, Video, Wrench, Image as ImageIcon, Folder, Box } from 'lucide-react';
+import { workflowPath } from '@/lib/projectWorkflow';
+import { getSelectedProject } from '@/stores/selectedProject';
 
 interface MenuItem {
   key: string;
@@ -18,6 +20,11 @@ const menuItems: MenuItem[] = [
 ];
 
 export default function Sidebar() {
+  const { projectId: projectIdParam } = useParams<{ projectId?: string }>();
+  const projectId = Number(projectIdParam) || getSelectedProject()?.id || 0;
+  const workflowItems = menuItems.map((item) => item.key === 'video'
+    ? { ...item, path: workflowPath(projectId, 'script') }
+    : item);
   return (
     <aside className="w-[100px] lg:w-[120px] min-h-screen bg-[var(--chrome-sidebar)] border-r border-[var(--border-subtle)] flex flex-col items-center py-6 gap-1.5 animate-slide-in flex-shrink-0 relative overflow-hidden">
       {/* 背景辉光效果 */}
@@ -41,7 +48,7 @@ export default function Sidebar() {
       {/* 分隔线 */}
       <div className="w-[60px] lg:w-[80px] h-px bg-gradient-to-r from-transparent via-[var(--border-default)] to-transparent mb-3" />
 
-      {menuItems.map((item, index) => (
+      {workflowItems.map((item, index) => (
         <NavLink
           key={item.key}
           to={item.path}

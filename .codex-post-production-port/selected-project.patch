@@ -1,0 +1,10 @@
+diff --git a/src/pages/PostProductionPage.tsx b/src/pages/PostProductionPage.tsx
+--- a/src/pages/PostProductionPage.tsx
++++ b/src/pages/PostProductionPage.tsx
+@@ -201,8 +201,9 @@ function formatSunoModelLabel(model: string) {
+ export default function PostProductionPage() {
+   const { id } = useParams<{ id: string }>()
+-  const projectId = Number(id)
++  const selectedProject = getSelectedProject()
++  const projectId = Number(id || selectedProject?.id || 0)
+   const [workbench, setWorkbench] = useState<Workbench | null>(null)

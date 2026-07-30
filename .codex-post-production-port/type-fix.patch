@@ -1,0 +1,22 @@
+diff --git a/src/api/postApiClient.ts b/src/api/postApiClient.ts
+--- a/src/api/postApiClient.ts
++++ b/src/api/postApiClient.ts
+@@ -14,13 +14,13 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<ApiRes
+ }
+ 
+ const postApiClient = {
+-  get<T>(path: string): Promise<ApiResponse<T>> {
+-    return request<T>(path);
++  get(path: string): Promise<ApiResponse<any>> {
++    return request<any>(path);
+   },
+-  post<T>(path: string, body?: unknown, config: RequestConfig = {}): Promise<ApiResponse<T>> {
++  post(path: string, body?: unknown, config: RequestConfig = {}): Promise<ApiResponse<any>> {
+     const formData = body instanceof FormData;
+     const headers = new Headers(config.headers);
+     if (formData) headers.delete('Content-Type');
+-    return request<T>(path, {
++    return request<any>(path, {
+       method: 'POST',
+       headers,
+       body: body === undefined ? undefined : formData ? body : JSON.stringify(body),

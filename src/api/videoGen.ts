@@ -70,11 +70,14 @@ export async function fetchImageAssets(projectId: number): Promise<ImageAssetRec
 
 export async function submitVideoGeneration(
   shotId: number,
-  payload: { referenceAssetIds?: number[]; customPrompt?: string; resolution?: string; aspectRatio?: string },
+  payload: { referenceAssetIds?: number[]; customPrompt?: string; resolution?: string; aspectRatio?: string; seedanceModel?: 'fast' | 'pro'; provider?: 'volcengine' | 'runninghub' | 'happy_horse' },
 ): Promise<{ task_id?: number; video_asset_id?: number }> {
   const query = new URLSearchParams({
+    ...(payload.referenceAssetIds?.length ? { reference_asset_ids: payload.referenceAssetIds.join(',') } : {}),
     resolution: payload.resolution || '1080p',
     aspect_ratio: payload.aspectRatio || '16:9',
+    seedance_model: payload.seedanceModel || 'fast',
+    provider: payload.provider || 'volcengine',
   });
   return apiRequest(`/api/video-gen/shot/${shotId}?${query.toString()}`, {
     method: 'POST',

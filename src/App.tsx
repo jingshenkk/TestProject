@@ -4,15 +4,17 @@ import AppLayout from '@/components/AppLayout';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import RouteSkeleton from '@/components/RouteSkeleton';
 import AuthGate from '@/components/AuthGate';
+import { ToastProvider } from '@/components/common/Toast';
 
 // P3-2：页面懒加载，配合 Suspense + RouteSkeleton 实现按路由分块与加载态兜底
-const HomePage = lazy(() => import('@/pages/HomePage'));
-const VideoPage = lazy(() => import('@/pages/VideoPage'));
+const HomePage = lazy(() => import('@/pages/UnifiedHomePage'));
+const VideoPage = lazy(() => import('@/pages/ManualScriptPageV3'));
 const VideoGenPage = lazy(() => import('@/pages/VideoGenPage'));
 const StoryboardPage = lazy(() => import('@/pages/StoryboardPage'));
 const ImageCreationPage = lazy(() => import('@/pages/ImageCreationPage'));
 const ProjectsPage = lazy(() => import('@/pages/ProjectsPage'));
 const PostProductionPage = lazy(() => import('@/pages/PostProductionPage'));
+const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
 
 function PlaceholderPage({ name }: { name: string }) {
   return (
@@ -40,6 +42,7 @@ function NotFound() {
 function App() {
   return (
     <BrowserRouter>
+      <ToastProvider>
       {/* P0：统一布局壳 AppLayout（Sidebar + 内容区），路由作为其子级由 <Outlet/> 渲染 */}
       <AuthGate>
       <AppLayout>
@@ -49,16 +52,22 @@ function App() {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/video" element={<VideoPage />} />
+              <Route path="/projects/:projectId/script" element={<VideoPage />} />
               <Route path="/storyboard" element={<StoryboardPage />} />
               {/* Image Creation page */}
+              <Route path="/projects/:projectId/storyboard" element={<StoryboardPage />} />
               <Route path="/image" element={<ImageCreationPage />} />
               <Route path="/video-gen" element={<VideoGenPage />} />
+              <Route path="/projects/:projectId/image" element={<ImageCreationPage />} />
               <Route path="/post" element={<PostProductionPage />} />
+              <Route path="/projects/:projectId/video" element={<VideoGenPage />} />
               <Route path="/post/:id" element={<PostProductionPage />} />
               <Route path="/tools" element={<PlaceholderPage name="工具" />} />
+              <Route path="/projects/:projectId/post" element={<PostProductionPage />} />
               <Route path="/space" element={<PlaceholderPage name="空间" />} />
               <Route path="/assets" element={<PlaceholderPage name="素材" />} />
               <Route path="/projects" element={<ProjectsPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
               {/* 404 兜底：未匹配路径展示提示并提供返回首页入口，避免主区域白屏 */}
               <Route path="*" element={<NotFound />} />
             </Routes>
@@ -66,6 +75,7 @@ function App() {
         </ErrorBoundary>
       </AppLayout>
       </AuthGate>
+      </ToastProvider>
     </BrowserRouter>
   );
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Sparkles, Zap, Wand2, Palette, Film, Bot, X, Check } from 'lucide-react';
+import { Sparkles, Zap, Wand2, Palette, Film, Bot, X, Check } from 'lucide-react';
 import Modal from './Modal';
 import {
   CONTENT_TYPE_OPTIONS,
@@ -26,12 +26,22 @@ export interface CreationInputOptions {
   modelKey: string;
 }
 
+interface ScriptProviderStatus {
+  key: 'claude' | 'openai' | 'deepseek';
+  name: string;
+  model: string;
+  configured: boolean;
+}
+
 interface CreationInputProps {
   defaultValue?: string;
   options?: CreationInputOptions;
   containerClassName?: string;
   onGenerate?: (options: CreationInputOptions, prompt: string) => void;
   isGenerating?: boolean;
+  generateLabel?: string;
+  generateHint?: string;
+  providerStatuses?: ScriptProviderStatus[];
 }
 
 const DEFAULT_OPTIONS: CreationInputOptions = {
@@ -43,7 +53,7 @@ const DEFAULT_OPTIONS: CreationInputOptions = {
   aspectRatio: '9:16',
   episodeCount: 12,
   duration: 120,
-  model: 'Claude 4.8',
+  model: 'DeepSeek V4 Pro',
   modelKey: 'claude',
 };
 
@@ -51,8 +61,13 @@ const optionConfig = [
   { key: 'type', icon: Film, color: 'var(--accent-primary)', label: '内容类型' },
   { key: 'style', icon: Palette, color: 'var(--accent-secondary)', label: '视觉风格' },
   { key: 'format', icon: Zap, color: 'var(--accent-tertiary)', label: '规格配置' },
-  { key: 'model', icon: Bot, color: 'var(--color-info)', label: 'AI模型' },
 ] as const;
+
+function providerKeyForModel(modelKey: string): 'claude' | 'openai' | 'deepseek' {
+  if (modelKey === 'deepseek') return 'deepseek';
+  if (modelKey === 'openai' || modelKey.startsWith('gpt')) return 'openai';
+  return 'claude';
+}
 
 export default function CreationInput({
   defaultValue = '',
@@ -60,6 +75,9 @@ export default function CreationInput({
   containerClassName = 'mb-6 lg:mb-8',
   onGenerate,
   isGenerating = false,
+  generateLabel = 'AI 生成',
+  generateHint = '按 Enter 提交，Shift+Enter 换行',
+  providerStatuses,
 }: CreationInputProps) {
   const [inputText, setInputText] = useState(defaultValue);
   const [isFocused, setIsFocused] = useState(false);
@@ -76,6 +94,16 @@ export default function CreationInput({
     episodeCount: options.episodeCount,
     duration: options.duration,
   });
+  const selectedProvider = providerKeyForModel(options.modelKey);
+  const selectedModel = AI_MODEL_OPTIONS.find((item) => providerKeyForModel(item.key) === selectedProvider);
+  const providerStatus = providerStatuses?.find((item) => item.key === selectedProvider);
+  const hasProviderStatus = Boolean(providerStatuses?.length);
+  const isSelectedProviderConfigured = !hasProviderStatus || Boolean(providerStatus?.configured);
+  const selectableModels = (hasProviderStatus
+    ? AI_MODEL_OPTIONS.filter((model) => providerStatuses?.some((item) => item.key === providerKeyForModel(model.key) && item.configured))
+    : AI_MODEL_OPTIONS
+  ).filter((model, index, models) => models.findIndex((item) => providerKeyForModel(item.key) === providerKeyForModel(model.key)) === index);
+  const canGenerate = Boolean(inputText.trim()) && !isGenerating && isSelectedProviderConfigured;
 
   // 类型选择分类
   const openModal = (modal: typeof activeModal) => {
@@ -155,14 +183,14 @@ export default function CreationInput({
 
   // 处理生成
   const handleGenerate = () => {
-    onGenerate?.(options, inputText);
+    if (!canGenerate) return;
+    onGenerate?.(options, inputText.trim());
   };
 
   const optionList = [
     { key: 'type' as const, label: options.type },
     { key: 'style' as const, label: options.style },
     { key: 'format' as const, label: options.format },
-    { key: 'model' as const, label: options.model },
   ];
 
   return (
@@ -179,12 +207,6 @@ export default function CreationInput({
 
       {/* Input Row */}
       <div className="flex items-start gap-3 lg:gap-4 mb-4 lg:mb-5 relative">
-        {/* Upload Button */}
-        <button className="focus-ring w-10 h-10 lg:w-14 lg:h-14 rounded-xl bg-[var(--bg-input)] border border-[var(--border-default)] flex items-center justify-center text-[var(--text-secondary)] hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)] hover:bg-[var(--accent-primary-bg)] transition-all duration-300 flex-shrink-0 group/upload relative overflow-hidden">
-          <Plus size={20} className="lg:w-6 lg:h-6 relative z-10 transition-transform duration-300 group-hover/upload:rotate-90" />
-          <span className="absolute inset-0 bg-gradient-to-br from-[var(--accent-primary)]/10 to-transparent opacity-0 group-hover/upload:opacity-100 transition-opacity" />
-        </button>
-
         {/* Text Input */}
         <div className="flex-1 relative">
           <textarea
@@ -192,6 +214,12 @@ export default function CreationInput({
             onChange={(e) => setInputText(e.target.value)}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                handleGenerate();
+              }
+            }}
             className="focus-ring w-full h-10 lg:h-14 min-h-[40px] lg:min-h-[56px] bg-transparent text-[var(--text-primary)] text-sm lg:text-base resize-none outline-none caret-[var(--accent-primary)] placeholder:text-[var(--text-muted)] transition-all duration-300 py-2"
             placeholder="描述你想创作的内容..."
           />
@@ -225,12 +253,26 @@ export default function CreationInput({
           );
         })}
 
+        <details className="relative group/advanced">
+          <summary className="focus-ring h-8 lg:h-10 px-3 lg:px-4 rounded-lg border border-[var(--border-default)] text-[var(--text-secondary)] text-xs lg:text-sm font-medium hover:border-[var(--color-info)]/50 hover:text-[var(--text-primary)] transition-all duration-300 whitespace-nowrap flex cursor-pointer list-none items-center gap-2">
+            <Bot size={14} className="text-[var(--color-info)]" />
+            高级设置 · {providerStatus?.model || options.model}
+          </summary>
+          <div className="absolute right-0 z-30 mt-2 w-72 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-3 shadow-xl">
+            <p className="text-xs font-medium text-[var(--text-primary)]">编剧模型</p>
+            <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">模型只影响剧本创作，系统仅允许使用当前已配置的 Provider。</p>
+            <button type="button" onClick={() => openModal('model')} className="mt-3 flex w-full items-center justify-between rounded-lg border border-[var(--border-default)] bg-[var(--bg-input)] px-3 py-2 text-left text-sm text-[var(--text-primary)] hover:border-[var(--color-info)]/60">
+              <span>{providerStatus?.model || options.model}</span><span className={isSelectedProviderConfigured ? 'text-[var(--color-success)] text-xs' : 'text-amber-500 text-xs'}>{isSelectedProviderConfigured ? '已连接' : '待配置'}</span>
+            </button>
+          </div>
+        </details>
+
         <div className="flex-1 min-w-[20px]" />
 
         {/* Generate Button - 主操作 */}
         <button
           onClick={handleGenerate}
-          disabled={isGenerating}
+          disabled={!canGenerate}
           className="focus-ring relative overflow-hidden h-9 lg:h-11 px-5 lg:px-7 rounded-lg bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-primary-dim)] text-white text-sm lg:text-base font-semibold flex items-center gap-2 hover:shadow-xl hover:shadow-[var(--accent-primary)]/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-300 whitespace-nowrap group/generate"
         >
           {/* 背景动画 */}
@@ -238,7 +280,7 @@ export default function CreationInput({
 
           {/* 闪烁星星 */}
           <Sparkles size={16} className="relative z-10 animate-pulse" />
-          <span className="relative z-10">{isGenerating ? '生成中...' : 'AI 生成'}</span>
+          <span className="relative z-10">{isGenerating ? '生成中...' : generateLabel}</span>
 
           {/* 高光扫过 */}
           <span
@@ -254,13 +296,12 @@ export default function CreationInput({
         </button>
       </div>
 
-      {/* 快捷提示 */}
-      <div className="mt-4 pt-3 border-t border-[var(--border-subtle)] flex items-center gap-4 text-xs text-[var(--text-muted)]">
+      <div className="mt-4 flex flex-col gap-2 border-t border-[var(--border-subtle)] pt-3 text-xs text-[var(--text-muted)] sm:flex-row sm:items-center sm:justify-between">
         <span className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-success)]" />
-          AI 已就绪
+          <span className={'w-1.5 h-1.5 rounded-full ' + (isSelectedProviderConfigured ? 'bg-[var(--color-success)]' : 'bg-amber-500')} />
+          {isSelectedProviderConfigured ? (providerStatus ? (selectedModel?.provider || providerStatus.name) + ' · ' + providerStatus.model + ' 已连接' : '使用 LingJingOS 默认编剧模型') : '当前编剧模型尚未配置'}
         </span>
-        <span className="hidden sm:inline">提示: 按 Enter 发送，Shift+Enter 换行</span>
+        <span>{generateHint}</span>
       </div>
 
       {/* ========== 1. 内容类型选择弹窗 ========== */}
@@ -468,8 +509,8 @@ export default function CreationInput({
         <div className="px-6 py-4 border-b border-[var(--border-subtle)] flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-semibold text-[var(--text-primary)]">选择AI模型</h3>
-              <p className="text-xs text-[var(--text-muted)]">选择最适合创作的AI模型</p>
+              <h3 className="text-base font-semibold text-[var(--text-primary)]">选择编剧 Provider</h3>
+              <p className="text-xs text-[var(--text-muted)]">选择已配置的 Provider，实际模型以系统运行时配置为准。</p>
             </div>
             <button
               onClick={closeModal}
@@ -482,7 +523,7 @@ export default function CreationInput({
         {/* 内容区 - 可滚动 */}
         <div className="p-4 overflow-y-auto flex-1">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {AI_MODEL_OPTIONS.map((model) => (
+            {selectableModels.map((model) => (
               <button
                 key={model.key}
                 onClick={() => selectAIModel(model)}
@@ -495,7 +536,7 @@ export default function CreationInput({
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-1">
-                      <span className="font-semibold text-sm text-[var(--text-primary)]">{model.label}</span>
+                      <span className="font-semibold text-sm text-[var(--text-primary)]">{providerStatuses?.find((item) => item.key === providerKeyForModel(model.key))?.model || model.label}</span>
                       {model.recommended && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--color-success)]/20 text-[var(--color-success)]">
                           推荐

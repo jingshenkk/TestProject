@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchProjects } from '@/api/projects';
 import { setSelectedProject } from '@/stores/selectedProject';
 import type { Project } from '@/types/project';
-import { localDemoProjects, toMockWorkspaceProject } from '@/mocks/localDemoProjects';
 
 /**
  * 首页「最近个人项目」
@@ -16,13 +15,11 @@ import { localDemoProjects, toMockWorkspaceProject } from '@/mocks/localDemoProj
 export default function RecentProjects() {
   const navigate = useNavigate();
   const projectsQuery = useQuery({ queryKey: ['projects'], queryFn: fetchProjects });
-  // Local demos are read-only, but use the same entry path as real projects.
-  // Keeping them first preserves a usable creation entry point for an empty database.
-  const projects = [...localDemoProjects.map(toMockWorkspaceProject), ...(projectsQuery.data || [])];
+  const projects = projectsQuery.data || [];
 
   const handleOpenProject = (project: Project) => {
     setSelectedProject(project);
-    navigate('/video', { state: { project } });
+    navigate('/projects/' + project.id + '/script', { state: { project } });
   };
 
   const handleCardKeyDown = (e: React.KeyboardEvent, project: Project) => {
@@ -52,7 +49,7 @@ export default function RecentProjects() {
       </div>
 
       {/* Project Cards - Responsive Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 lg:gap-4">
+      <div className="recent-project-grid">
         {projects.map((project, index) => (
           <div
             key={project.id}

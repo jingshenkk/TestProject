@@ -5,7 +5,7 @@ import ProcessStepBar from '@/components/ProcessStepBar';
 import AppHeader from '@/components/AppHeader';
 import { fetchImageAssets, fetchVideoGenShots, fetchVideoTask, fetchVideoVersions, submitVideoGeneration } from '@/api/videoGen';
 import { imageAssetUrl } from '@/api/imageAssets';
-import { getSelectedProject } from '@/stores/selectedProject';
+import { useWorkflowProject } from '@/hooks/useWorkflowProject';
 import { sampleShots as mockVideoShots, videoVersions } from '@/mocks/videoGen';
 import { showcaseMedia } from '@/mocks/showcaseMedia';
 
@@ -16,7 +16,7 @@ function assetKind(assetType: string): 'character' | 'scene' | 'prop' {
 }
 
 export default function VideoGenPage() {
-  const project = getSelectedProject();
+  const { project, projectQuery } = useWorkflowProject();
   const isMockProject = Boolean(project?.isMock);
   const [selectedMockShotId, setSelectedMockShotId] = useState(mockVideoShots[0]?.id ?? '');
   const [mockNotice, setMockNotice] = useState('');
@@ -25,12 +25,16 @@ export default function VideoGenPage() {
   const [selectedVersionId, setSelectedVersionId] = useState<number | null>(null);
   const [prompt, setPrompt] = useState('');
   const [activeTaskId, setActiveTaskId] = useState<number | null>(null);
+  const [resolution, setResolution] = useState<'720p' | '1080p'>('1080p');
+  const [seedanceModel, setSeedanceModel] = useState<'fast' | 'pro'>('fast');
+  const [provider, setProvider] = useState<'volcengine' | 'runninghub' | 'happy_horse'>('volcengine');
+  const [selectedReferenceIds, setSelectedReferenceIds] = useState<number[]>([]);
   const shotsQuery = useQuery({ queryKey: ['video-shots', project?.id], queryFn: () => fetchVideoGenShots(project!.id), enabled: Boolean(project && !isMockProject) });
   const imagesQuery = useQuery({ queryKey: ['images', project?.id], queryFn: () => fetchImageAssets(project!.id), enabled: Boolean(project && !isMockProject) });
   const videoQuery = useQuery({ queryKey: ['video-versions', project?.id, selectedShotId], queryFn: () => fetchVideoVersions(project!.id, selectedShotId || undefined), enabled: Boolean(project && selectedShotId && !isMockProject) });
   const taskQuery = useQuery({ queryKey: ['video-task', activeTaskId], queryFn: () => fetchVideoTask(activeTaskId!), enabled: Boolean(activeTaskId), refetchInterval: (query) => query.state.data?.status === 'queued' || query.state.data?.status === 'running' ? 1500 : false });
   const generateMutation = useMutation({
-    mutationFn: (shotId: number) => submitVideoGeneration(shotId, { referenceAssetIds: (imagesQuery.data || []).filter((asset) => asset.effective_status === 'completed' && asset.file_exists).slice(0, 6).map((asset) => asset.id), customPrompt: prompt, resolution: '1080p', aspectRatio: project?.aspectRatio || '16:9' }),
+    mutationFn: (shotId: number) => submitVideoGeneration(shotId, { referenceAssetIds: selectedReferenceIds, customPrompt: prompt, resolution, aspectRatio: project?.aspectRatio || '16:9', seedanceModel: provider === 'happy_horse' ? 'fast' : seedanceModel, provider }),
     onSuccess: (result) => { if (result.task_id) setActiveTaskId(result.task_id); queryClient.invalidateQueries({ queryKey: ['video-versions', project?.id, selectedShotId] }); },
   });
 
@@ -41,7 +45,13 @@ export default function VideoGenPage() {
   const selectedShot = shotsQuery.data?.find((shot) => shot.id === selectedShotId);
   const imageAssets = imagesQuery.data || [];
   const firstFrame = useMemo(() => imageAssets.find((asset) => asset.asset_type === 'video_first_frame' && Number(asset.shot_id) === selectedShotId && asset.effective_status === 'completed' && asset.file_exists), [imageAssets, selectedShotId]);
-  const error = shotsQuery.error || imagesQuery.error || videoQuery.error || taskQuery.error || generateMutation.error;
+  const eligibleReferenceAssets = useMemo(() => imageAssets.filter((asset) => asset.effective_status === 'completed' && asset.file_exists), [imageAssets]);
+  useEffect(() => {
+    if (!firstFrame) return;
+    setSelectedReferenceIds((current) => current.length ? current : [firstFrame.id]);
+  }, [firstFrame]);
+  const toggleReference = (assetId: number) => setSelectedReferenceIds((current) => current.includes(assetId) ? current.filter((id) => id !== assetId) : [...current, assetId]);
+  const error = projectQuery.error || shotsQuery.error || imagesQuery.error || videoQuery.error || taskQuery.error || generateMutation.error;
   const errorMessage = error instanceof Error ? error.message : '';
 
   if (!project) return <div className="flex-1 flex items-center justify-center text-sm text-[var(--text-secondary)]">请先在项目页选择一个项目。</div>;
@@ -77,6 +87,8 @@ export default function VideoGenPage() {
       <AppHeader title={project.name} subtitle="视频生成" />
       <main className="flex-1 p-4 lg:p-6 overflow-hidden flex flex-col min-h-0">
         <ProcessStepBar />
+        <section className="mb-4 flex flex-wrap items-end justify-between gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] px-4 py-3"><div className="flex flex-wrap items-end gap-3"><label className="grid gap-1 text-xs text-[var(--text-muted)]"><span>清晰度</span><select value={resolution} onChange={(event) => setResolution(event.target.value as '720p' | '1080p')} className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-input)] px-3 py-2 text-sm text-[var(--text-primary)]"><option value="720p">720p</option><option value="1080p">1080p</option></select></label><label className="grid gap-1 text-xs text-[var(--text-muted)]"><span>Seedance 模型</span><select value={seedanceModel} onChange={(event) => setSeedanceModel(event.target.value as 'fast' | 'pro')} disabled={provider === 'happy_horse'} className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-input)] px-3 py-2 text-sm text-[var(--text-primary)] disabled:opacity-50"><option value="fast">Fast</option><option value="pro">Pro</option></select></label><label className="grid gap-1 text-xs text-[var(--text-muted)]"><span>生成服务</span><select value={provider} onChange={(event) => setProvider(event.target.value as 'volcengine' | 'runninghub' | 'happy_horse')} className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-input)] px-3 py-2 text-sm text-[var(--text-primary)]"><option value="volcengine">Volcengine</option><option value="runninghub">RunningHub</option><option value="happy_horse">HappyHorse</option></select></label></div><p className="text-xs text-[var(--text-secondary)]">沿用旧前端参数：{resolution} · {project?.aspectRatio || '16:9'} · {provider} / {provider === 'happy_horse' ? 'fast' : seedanceModel} · 已选 {selectedReferenceIds.length} 张参考资产</p></section>
+        <section className="mb-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-4"><div className="flex items-center justify-between gap-3"><div><p className="text-sm font-semibold text-[var(--text-primary)]">视频参考资产</p><p className="mt-1 text-xs text-[var(--text-secondary)]">请选择本镜头需要传给后端的首帧、角色、场景或机位参考；默认优先选择视频首帧。</p></div><span className="text-xs text-[var(--accent-primary)]">{selectedReferenceIds.length} 已选择</span></div><div className="mt-3 flex gap-2 overflow-x-auto pb-1">{eligibleReferenceAssets.slice(0, 24).map((asset) => <button key={asset.id} type="button" onClick={() => toggleReference(asset.id)} className={`w-20 shrink-0 overflow-hidden rounded-lg border p-1 text-left ${selectedReferenceIds.includes(asset.id) ? 'border-[var(--accent-primary)] bg-[var(--accent-primary-bg)]' : 'border-[var(--border-subtle)] bg-[var(--bg-surface)]'}`}><div className="aspect-square overflow-hidden rounded bg-[var(--bg-input)]">{imageAssetUrl(asset) ? <img src={imageAssetUrl(asset)} alt={asset.name} className="h-full w-full object-cover" /> : <ImageIcon size={18} className="m-auto mt-6 text-[var(--text-muted)]" />}</div><span className="mt-1 block truncate text-[10px] text-[var(--text-secondary)]" title={asset.name}>{asset.name}</span></button>)}</div></section>
         {errorMessage && <p className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-500">{errorMessage}</p>}
         <div className="flex flex-wrap items-center gap-3 mb-4">
           <div className="relative"><button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--bg-card)] border border-[var(--border-subtle)] text-sm text-[var(--text-primary)]"><span>项目镜头</span><ChevronDown size={16} className="text-[var(--text-muted)]" /></button></div>
@@ -92,7 +104,7 @@ export default function VideoGenPage() {
               <div className="flex items-center justify-between gap-3 mb-4"><div><h3 className="text-base font-semibold text-[var(--text-primary)]">{selectedShot.code}</h3><p className="text-xs text-[var(--text-muted)] mt-1">{selectedShot.duration} · 使用真实项目资产作为参考</p></div><div className="flex flex-wrap gap-2">{(videoQuery.data || []).map((version) => <button key={version.id} onClick={() => setSelectedVersionId(version.id)} className={`px-2.5 py-1 rounded-md text-xs border ${selectedVersionId === version.id ? 'border-[var(--accent-primary)] text-[var(--accent-primary)] bg-[var(--accent-primary-bg)]' : 'border-[var(--border-subtle)] text-[var(--text-secondary)]'}`}>{version.name}</button>)}</div></div>
               <textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="可选：输入本次提交给生产端的附加视频提示词..." className="w-full min-h-44 resize-y rounded-lg bg-[var(--bg-input)] border border-[var(--border-subtle)] p-4 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]" />
               {taskQuery.data && <p className={`mt-3 text-sm ${taskQuery.data.status === 'failed' ? 'text-red-500' : 'text-[var(--text-secondary)]'}`}>任务 {taskQuery.data.status} · {Math.round(taskQuery.data.progress || 0)}% {taskQuery.data.progress_message || taskQuery.data.error_message || ''}</p>}
-              <div className="flex items-center justify-end gap-3 mt-3 pt-3 border-t border-[var(--border-subtle)]"><button onClick={() => generateMutation.mutate(selectedShot.id)} disabled={generateMutation.isPending} className="px-6 py-2.5 rounded-lg text-sm font-semibold bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-primary-dim)] text-white disabled:opacity-50 hover:shadow-lg hover:shadow-[var(--accent-primary)]/30 transition-all">{generateMutation.isPending ? '提交中...' : '开始生成'}</button></div>
+              <div className="flex items-center justify-end gap-3 mt-3 pt-3 border-t border-[var(--border-subtle)]">{selectedReferenceIds.length === 0 && <p className="mr-auto text-xs text-amber-500">请先在上方选择至少一张已完成的首帧、角色、场景或机位参考资产。</p>}<button onClick={() => generateMutation.mutate(selectedShot.id)} disabled={generateMutation.isPending || selectedReferenceIds.length === 0} className="px-6 py-2.5 rounded-lg text-sm font-semibold bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-primary-dim)] text-white disabled:opacity-50 hover:shadow-lg hover:shadow-[var(--accent-primary)]/30 transition-all">{generateMutation.isPending ? '提交中...' : '开始生成'}</button></div>
             </div>
             <div className="w-[320px] flex flex-col gap-4 flex-shrink-0 overflow-y-auto pl-1">
               <div className="bg-[var(--bg-card)] rounded-xl p-4 border border-[var(--border-subtle)]"><h4 className="text-sm font-semibold text-[var(--text-primary)] mb-3">首帧图片</h4><div className="aspect-[16/9] bg-[var(--bg-surface)] rounded-lg flex items-center justify-center border border-[var(--border-subtle)] mb-3 overflow-hidden">{firstFrame ? <img src={imageAssetUrl(firstFrame)} alt="首帧参考" className="w-full h-full object-cover" /> : <div className="text-center"><ImageIcon size={28} className="mx-auto text-[var(--text-muted)]" /><span className="text-xs text-[var(--text-muted)] mt-2 block">未生成</span></div>}</div>{!firstFrame && <p className="text-xs text-[var(--accent-primary)]">建议先生成首帧图片，视频生成更符合您的期望。</p>}</div>
